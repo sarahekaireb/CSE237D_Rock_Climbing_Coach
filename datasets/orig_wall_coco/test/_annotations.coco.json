@@ -1,0 +1,123 @@
+{
+    "info": {
+        "year": "2022",
+        "version": "1",
+        "description": "Exported from roboflow.ai",
+        "contributor": "",
+        "url": "https://public.roboflow.ai/object-detection/undefined",
+        "date_created": "2022-04-27T20:11:09+00:00"
+    },
+    "licenses": [
+        {
+            "id": 1,
+            "url": "https://creativecommons.org/licenses/by/4.0/",
+            "name": "CC BY 4.0"
+        }
+    ],
+    "categories": [
+        {
+            "id": 0,
+            "name": "rockwall",
+            "supercategory": "none"
+        },
+        {
+            "id": 1,
+            "name": "rockwall",
+            "supercategory": "rockwall"
+        }
+    ],
+    "images": [
+        {
+            "id": 0,
+            "license": 1,
+            "file_name": "img11_jpg.rf.7bd97a591bc2094f5f179f20d4e25e44.jpg",
+            "height": 810,
+            "width": 576,
+            "date_captured": "2022-04-27T20:11:09+00:00"
+        },
+        {
+            "id": 1,
+            "license": 1,
+            "file_name": "img13_jpg.rf.0e27f5bd31a12a9c4b7b43ea5eaf70e3.jpg",
+            "height": 810,
+            "width": 576,
+            "date_captured": "2022-04-27T20:11:09+00:00"
+        }
+    ],
+    "annotations": [
+        {
+            "id": 0,
+            "image_id": 0,
+            "category_id": 1,
+            "bbox": [
+                0,
+                77,
+                576,
+                733.264132
+            ],
+            "area": 422360.140032,
+            "segmentation": [
+                [
+                    0,
+                    810,
+                    576,
+                    810,
+                    576,
+                    76.735868,
+                    213.003594,
+                    120.525461,
+                    0,
+                    132.332511,
+                    0,
+                    810
+                ]
+            ],
+            "iscrowd": 0
+        },
+        {
+            "id": 1,
+            "image_id": 1,
+            "category_id": 1,
+            "bbox": [
+                0,
+                0,
+                576,
+                766.45539
+            ],
+            "area": 441478.30464,
+            "segmentation": [
+                [
+                    576,
+                    68.445237,
+                    558.878756,
+                    51.216634,
+                    194.822958,
+                    2.470219,
+                    51.069278,
+                    0,
+                    0,
+                    18.262112,
+                    0,
+                    537.614938,
+                    86.826916,
+                    681.807622,
+                    114.18545,
+                    690.243191,
+                    145.422918,
+                    742.406491,
+                    166.455643,
+                    752.697234,
+                    284.818495,
+                    766.45539,
+                    438.215191,
+                    732.14352,
+                    576,
+                    719.866565,
+                    576,
+                    68.445237
+                ]
+            ],
+            "iscrowd": 0
+        }
+    ]
+}
