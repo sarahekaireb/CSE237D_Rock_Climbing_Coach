@@ -66,7 +66,7 @@ def plot_image(img, results, cx, cy, pTime):
   cv2.imshow('image', img)
   cv2.waitKey(1)
 
-def main():
+def main(cap):
   prev = []
   first_frame_flag = True
   total_frames_count = 0
@@ -126,5 +126,21 @@ def main():
   print('Total frames processed: ', total_frames_count)
   print('Total frames stored: ', stored_frames_count)
 
+def get_last_frame_cordinates(cap):
+  last_frame_cordinates = []
+
+  #Run code on input video - cap and store coordinates of all frames in dict_coordinates
+  main(cap)
+
+  #Return last frame coordinates
+  last_frame_cordinates.append(dict_coordinates['left_hand'][-1])
+  last_frame_cordinates.append(dict_coordinates['right_hand'][-1])
+  last_frame_cordinates.append(dict_coordinates['left_hip'][-1])
+  last_frame_cordinates.append(dict_coordinates['right_hip'][-1])
+  last_frame_cordinates.append(dict_coordinates['left_leg'][-1])
+  last_frame_cordinates.append(dict_coordinates['right_leg'][-1])
+  
+  return (last_frame_cordinates)
+
 if __name__ == "__main__":
-    main()
+    main(cap)
