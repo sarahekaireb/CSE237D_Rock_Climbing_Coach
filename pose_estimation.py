@@ -13,8 +13,7 @@ import cv2
 import mediapipe as mp
 import time
 from scipy import spatial
-from google.colab.patches import cv2_imshow
-from IPython.core.display import ProgressBar
+
 
 # initialize mediapipe requirements
 mpPose = mp.solutions.pose
@@ -22,7 +21,7 @@ pose = mpPose.Pose()
 mpDraw = mp.solutions.drawing_utils
 
 # input video path
-cap = cv2.VideoCapture('/content/drive/MyDrive/CSE_237D/rock_dataset_0/clip2/climb.mp4')
+cap = cv2.VideoCapture('rock_dataset_0/clip2/climb.mp4')
 
 # global dict to store the coordiantes (required towards MVP)
 dict_coordinates = {'left_hand': [], 'right_hand': [], 'left_leg': [], 'right_leg': [], 'left_hip': [], 'right_hip': []}
@@ -64,7 +63,7 @@ def plot_image(img, results, cx, cy, pTime):
   pTime = cTime
     
   cv2.putText(img, str(int(fps)), (50, 50), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 3)
-  cv2_imshow(img)
+  cv2.imshow('image', img)
   cv2.waitKey(1)
 
 def main():
