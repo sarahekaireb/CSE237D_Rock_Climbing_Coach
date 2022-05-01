@@ -13,6 +13,8 @@ import cv2
 import mediapipe as mp
 import time
 from scipy import spatial
+import math
+from math import hypot
 
 
 # initialize mediapipe requirements
@@ -66,12 +68,35 @@ def plot_image(img, results, cx, cy, pTime):
   cv2.imshow('image', img)
   cv2.waitKey(1)
 
+def compute_distance(list1, list2):
+  list_1_left_x = list1[46]
+  list_1_left_y = list1[47]
+  list_2_left_x = list2[46]
+  list_2_left_y = list2[46]
+  left_dist = math.hypot(list_1_left_x-list_2_left_x, list_1_left_y-list_2_left_y)
+  list_1_right_x = list1[48]
+  list_1_right_y = list1[49]
+  list_2_right_x = list2[48]
+  list_2_right_y = list2[49]
+  right_dist = math.hypot(list_1_right_x-list_2_right_x, list_1_right_y-list_2_right_y)
+  return (left_dist + right_dist)/2
+
+def check_coord_bounding(lm_list, holds_bounding_box):
+  if check_point_in_box(lm_list[38], lm_list[39], holds_bounding_box) and check_point_in_box(lm_list[40], lm_list[41], holds_bounding_box) and check_point_in_box(lm_list[62], lm_list[63], holds_bounding_box) and check_point_in_box(lm_list[64], lm_list[65], holds_bounding_box):
+      return True
+
+def check_point_in_box(x,y, holds_bounding_box):
+  return True
+
 def main(cap):
   prev = []
   first_frame_flag = True
   total_frames_count = 0
   stored_frames_count = 0
   pTime = 0
+  total_distance = 0
+  num_moves = 0
+  holds_bounding_box = []
 
   while True:
     print('----------------------')
@@ -107,8 +132,11 @@ def main(cap):
       else:
         result = check_similarity(prev, lm_list) #prev = 66 cordinates, lm_list = 66 cordinates
         print('Similarity Value:', result)
-        if(result < 0.99999):
+        if(result < 0.9999):
           store_coordinates(lm_list)
+          if check_coord_bounding(lm_list, holds_bounding_box):
+            total_distance += compute_distance(prev, lm_list)
+            num_moves = num_moves + 1
           print("Similarity found and coordinates stored")
           stored_frames_count += 1
           plot_image(img, results, cx, cy, pTime)
@@ -125,6 +153,9 @@ def main(cap):
   print('---------- Processsing Completed ----------')
   print('Total frames processed: ', total_frames_count)
   print('Total frames stored: ', stored_frames_count)
+  print('Total distance covered (in pixels): ', total_distance)
+  print('Number of moves: ', num_moves)
+
 
 def get_last_frame_cordinates(cap):
   last_frame_cordinates = []
