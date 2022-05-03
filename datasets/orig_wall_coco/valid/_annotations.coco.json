@@ -1,0 +1,84 @@
+{
+    "info": {
+        "year": "2022",
+        "version": "1",
+        "description": "Exported from roboflow.ai",
+        "contributor": "",
+        "url": "https://public.roboflow.ai/object-detection/undefined",
+        "date_created": "2022-04-27T20:11:09+00:00"
+    },
+    "licenses": [
+        {
+            "id": 1,
+            "url": "https://creativecommons.org/licenses/by/4.0/",
+            "name": "CC BY 4.0"
+        }
+    ],
+    "categories": [
+        {
+            "id": 0,
+            "name": "rockwall",
+            "supercategory": "none"
+        },
+        {
+            "id": 1,
+            "name": "rockwall",
+            "supercategory": "rockwall"
+        }
+    ],
+    "images": [
+        {
+            "id": 0,
+            "license": 1,
+            "file_name": "img15_jpg.rf.f79c91d5e05668f085733da3be85fdef.jpg",
+            "height": 810,
+            "width": 576,
+            "date_captured": "2022-04-27T20:11:09+00:00"
+        }
+    ],
+    "annotations": [
+        {
+            "id": 0,
+            "image_id": 0,
+            "category_id": 1,
+            "bbox": [
+                0,
+                118,
+                576,
+                691.786459
+            ],
+            "area": 398469.000384,
+            "segmentation": [
+                [
+                    576,
+                    118.213541,
+                    439.848842,
+                    126.429366,
+                    0,
+                    212.095295,
+                    0,
+                    804.689115,
+                    69.408878,
+                    810,
+                    366.166696,
+                    810,
+                    390.30815,
+                    803.900758,
+                    431.265522,
+                    742.542305,
+                    457.693068,
+                    730.747754,
+                    471.855198,
+                    683.549245,
+                    566.789589,
+                    625.124542,
+                    576,
+                    607.490521,
+                    576,
+                    118.213541
+                ]
+            ],
+            "iscrowd": 0
+        }
+    ]
+}
