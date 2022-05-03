@@ -4,7 +4,7 @@ import torchvision.transforms.functional as F
 import numpy as np
 from PIL import Image
 
-from model_factory import get_segmentation_model
+from train_utils.model_factory import get_segmentation_model
 
 import os
 import argparse
