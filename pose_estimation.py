@@ -90,6 +90,7 @@ def check_point_in_box(x,y, holds_bounding_box):
 
 def main(cap):
   prev = []
+  output_img_list = []
   first_frame_flag = True
   total_frames_count = 0
   stored_frames_count = 0
@@ -125,6 +126,7 @@ def main(cap):
         prev = lm_list
         first_frame_flag = False
         stored_frames_count += 1
+        output_img_list.append(img)
         plot_image(img, results, cx, cy, pTime)
 
 
@@ -139,6 +141,7 @@ def main(cap):
             num_moves = num_moves + 1
           print("Similarity found and coordinates stored")
           stored_frames_count += 1
+          output_img_list.append(img)
           plot_image(img, results, cx, cy, pTime)
         
         prev = lm_list
@@ -155,7 +158,19 @@ def main(cap):
   print('Total frames stored: ', stored_frames_count)
   print('Total distance covered (in pixels): ', total_distance)
   print('Number of moves: ', num_moves)
-
+  
+  # output a video consisting of just the processed frames
+  width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))   # float 'width'
+  height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # float 'height'
+  img_size = (width, height)
+  fps = 5
+  output_video = cv2.VideoWriter('pose_estimation.mp4',cv2.VideoWriter_fourcc(*'mp4v'), fps, img_size)
+ 
+  for i in range(len(output_img_list)):
+    output_video.write(output_img_list[i])
+  
+  output_video.release()
+  print('Output Video Released: ', fps, 'fps')
 
 def get_last_frame_cordinates(cap):
   last_frame_cordinates = []
