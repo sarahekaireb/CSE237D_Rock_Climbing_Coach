@@ -17,26 +17,29 @@ def get_video_pose(vid_arr):
     dict_coordinates = {'left_hand': [], 'right_hand': [], 'left_hip': [], 'right_hip': [], 'left_leg': [], 'right_leg': []}
     all_landmarks = []
     all_results = []
+    frames = []
     for i in range(vid_arr.shape[0]):
         img = vid_arr[i]
         results = pose.process(img)
         
-        lm_list = []
-        for id, lm in enumerate(results.pose_landmarks.landmark):  
-            h, w, c = img.shape
-            cx, cy = int(lm.x*w), int(lm.y*h)
-            lm_list.append(cx)
-            lm_list.append(cy)
-        all_landmarks.append(lm_list)
-        all_results.append(results)
-        dict_coordinates['left_hand'].append((lm_list[38], lm_list[39])) #left_index - x, y 
-        dict_coordinates['right_hand'].append((lm_list[40], lm_list[41])) #right_index - x, y
-        dict_coordinates['left_hip'].append((lm_list[46], lm_list[47])) #left_hip - x, y
-        dict_coordinates['right_hip'].append((lm_list[48], lm_list[49])) #right_hip - x, y
-        dict_coordinates['left_leg'].append((lm_list[62], lm_list[63])) #left_foot - x, y
-        dict_coordinates['right_leg'].append((lm_list[64], lm_list[65])) #right_foot - x, y
+        if results.pose_landmarks is not None:
+            frames.append(i)
+            lm_list = []
+            for id, lm in enumerate(results.pose_landmarks.landmark):  
+                h, w, c = img.shape
+                cx, cy = int(lm.x*w), int(lm.y*h)
+                lm_list.append(cx)
+                lm_list.append(cy)
+            all_landmarks.append(lm_list)
+            all_results.append(results)
+            dict_coordinates['left_hand'].append((lm_list[38], lm_list[39])) #left_index - x, y 
+            dict_coordinates['right_hand'].append((lm_list[40], lm_list[41])) #right_index - x, y
+            dict_coordinates['left_hip'].append((lm_list[46], lm_list[47])) #left_hip - x, y
+            dict_coordinates['right_hip'].append((lm_list[48], lm_list[49])) #right_hip - x, y
+            dict_coordinates['left_leg'].append((lm_list[62], lm_list[63])) #left_foot - x, y
+            dict_coordinates['right_leg'].append((lm_list[64], lm_list[65])) #right_foot - x, y
     
-    return all_results, all_landmarks, dict_coordinates
+    return frames, all_results, all_landmarks, dict_coordinates
 
 def check_similarity(list1, list2):
     """Returns similarity between two lists of landmark coordinates"""

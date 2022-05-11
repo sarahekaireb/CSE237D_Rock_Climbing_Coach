@@ -39,7 +39,8 @@ if __name__ == '__main__':
     hold_img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
 
     # All pose-related information
-    results_arr, landmarks_arr, joint_positions = get_video_pose(raw_vid)
+    frames, results_arr, landmarks_arr, joint_positions = get_video_pose(raw_vid)
+    raw_vid = raw_vid.take(frames, axis=0)
     significances = get_significant_frames(landmarks_arr)
 
     # hold information
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     climb_holds = process_hold_response(response)
 
     percent_complete = compute_percent_complete(climb_holds, joint_positions)
-    print("Completed ", str(percent_complete) + '%% of climb')
+    print("Completed ", str(percent_complete) + '% of climb')
 
 
 

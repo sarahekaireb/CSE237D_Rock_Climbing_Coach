@@ -40,9 +40,6 @@ def predict_holds(rgb_img):
                                                         api=API_KEY)
     response = requests.post(url, data=m, headers={'Content-Type': m.content_type})
 
-    print(response)
-    print(response.json())
-
     return response, response.json()
 
 if __name__ == '__main__':
