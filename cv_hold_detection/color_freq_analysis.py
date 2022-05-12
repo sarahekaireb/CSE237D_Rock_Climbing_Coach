@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import colors
 
-def plot_colors_peaks(fn, peak_hues, hold_window=4, v_thresh=30, s_thresh=30):
+def plot_colors_peaks(fn, peak_hues, hold_window=5, v_thresh=30, s_thresh=30):
 	"""
 	Given a list of peak hues, generate a plot for each hue
 	"""
@@ -27,7 +27,7 @@ def plot_colors_peaks(fn, peak_hues, hold_window=4, v_thresh=30, s_thresh=30):
 		myRGB = rgb_img.astype(int)
 		plt.show()
 
-def find_peaks_histogram(hist, window=5, thresh=200):
+def find_peaks_histogram(hist, window=6, thresh=200, diff_window=30):
 	"""
 	find the peaks in the color histogram
 	"""
@@ -40,13 +40,13 @@ def find_peaks_histogram(hist, window=5, thresh=200):
 
 		# left
 		i = cur_hue-1
-		while(hist[i] > hist[i-1]-15):
+		while(hist[i] > hist[i-1]-diff_window):
 			hist[i] = 0
 			i = i-1
 
 		# right
 		i = cur_hue+1
-		while(hist[i] > hist[i+1]+15):
+		while(hist[i] > hist[i+1]+diff_window):
 			hist[i] = 0
 			i = i+1
 
