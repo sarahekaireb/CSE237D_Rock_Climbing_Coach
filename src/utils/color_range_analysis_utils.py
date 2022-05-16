@@ -100,6 +100,7 @@ def draw_contours(contours, colors, rgb_img):
 		output = cv2.drawContours(img_cp, cnt, -1, color_dict_rgb[colors[i]], 3)
 	plt.imshow(img_cp.astype(int))
 	plt.show()
+	return img_cp
 
 def draw_bounds(holds, colors, rgb_img):
 	"""
@@ -113,6 +114,7 @@ def draw_bounds(holds, colors, rgb_img):
 		cv2.rectangle(img_cp,(x_low, y_low),(x_high, y_high),color_dict_rgb[colors[i]],2)
 	plt.imshow(img_cp)
 	plt.show()
+	return img_cp
 
 def overlap(hold1, hold2):
 	"""
@@ -189,7 +191,7 @@ def all_colors_segment(fn, m_fn=None):
 		mask = cv2.imread(m_fn)
 
 		#define kernel size  
-		kernel = np.ones((19,19),np.uint8)
+		kernel = np.ones((23,23),np.uint8)
 		# Remove unnecessary noise from mask
 		mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 		mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
@@ -225,5 +227,5 @@ def all_colors_segment(fn, m_fn=None):
 	draw_bounds(all_holds, all_colors, rgb_img)
 
 	# returns list of holds and corresponding list with the color of each hold
-	return all_holds, all_colors
+	return all_holds, all_colors, all_contours
 

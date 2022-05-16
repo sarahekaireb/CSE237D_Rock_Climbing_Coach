@@ -119,4 +119,5 @@ def draw_bounds(holds, colors, rgb_img):
 		cv2.rectangle(img_cp,(x_low, y_low),(x_high, y_high),color_dict_rgb[colors[i]],2)
 	plt.imshow(img_cp)
 	plt.show()
+	return img_cp
 
