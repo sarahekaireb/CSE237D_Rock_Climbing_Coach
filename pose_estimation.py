@@ -21,6 +21,7 @@ from math import hypot
 #from google.colab.patches import cv2_imshow # if using colab
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from predict_holds import predict_holds
 
 # initialize mediapipe requirements
 mpPose = mp.solutions.pose
@@ -28,7 +29,10 @@ pose = mpPose.Pose()
 mpDraw = mp.solutions.drawing_utils
 
 # input video path
-cap = cv2.VideoCapture('/content/drive/MyDrive/CSE_237D/rock_dataset_0/clip3/climb.mp4')
+cap = cv2.VideoCapture('rock_dataset_0/clip2/climb.mp4')
+img = cv2.imread('rock_dataset_0/clip2/holds.jpg')
+cap_holds = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
 
 # input ground truth excel file name
 excel_path = 'Climb Seconds.xlsx'
@@ -92,12 +96,22 @@ def compute_distance(list1, list2):
   right_dist = math.hypot(list_1_right_x-list_2_right_x, list_1_right_y-list_2_right_y)
   return (left_dist + right_dist)/2
 
-def check_coord_bounding(lm_list, holds_bounding_box):
-  if check_point_in_box(lm_list[38], lm_list[39], holds_bounding_box) and check_point_in_box(lm_list[40], lm_list[41], holds_bounding_box) and check_point_in_box(lm_list[62], lm_list[63], holds_bounding_box) and check_point_in_box(lm_list[64], lm_list[65], holds_bounding_box):
+def check_coord_bounding(lm_list, holds_bounding_box, h, w):
+  if (check_point_in_box(lm_list[62], lm_list[63], holds_bounding_box, h , w) 
+  and check_point_in_box(lm_list[64], lm_list[65], holds_bounding_box, h , w)):
+    if (check_point_in_box(lm_list[30], lm_list[31], holds_bounding_box, h , w) 
+  and check_point_in_box(lm_list[32], lm_list[33], holds_bounding_box, h , w)):
+      print("found valid position!!")
+      return True
+  return False
+
+def check_point_in_box(cx,cy, holds_bounding_box, h, w):
+  for box in holds_bounding_box:
+    if(cx > box[0] and cx < box[2] and cy > box[1] and cy < box[3]):
+      #print(box, " ", cx, " ", cy)
       return True
 
-def check_point_in_box(x,y, holds_bounding_box):
-  return True
+  return False
 
 # load ground truth labels from excel 
 def load_from_excel(excel_path):
@@ -132,7 +146,22 @@ def compute_scores(raw_predictions, raw_ground_truth_labels, total_elapsed_time)
 
   return accuracy, precision, recall, f1score
 
-def main(cap):
+def parse_holds(holds):
+  pred_list = holds[1]['predictions']
+  bounding_boxes = []
+
+  for p in pred_list:
+    min_x = p['x']-p['width']/2
+    min_y = p['y']-p['height']/2
+    max_x = p['x']+p['width']/2
+    max_y = p['y']+p['height']/2
+
+    box = [min_x, min_y, max_x,max_y]
+    bounding_boxes.append(box)
+
+  return bounding_boxes
+
+def main(cap, cap_holds):
   prev = []
   output_img_list = []
   first_frame_flag = True
@@ -140,7 +169,10 @@ def main(cap):
   pTime = 0
   total_distance = 0
   num_moves = 0
-  holds_bounding_box = []
+  holds = predict_holds(cap_holds)
+  print("holds")
+  holds_bounding_box = parse_holds(holds)
+  print(holds_bounding_box)
   # required for computing accuracy
   raw_predictions = []
 
@@ -191,7 +223,7 @@ def main(cap):
         print('Similarity Value:', result)
         if(result < threshold):
           store_coordinates(lm_list)
-          if check_coord_bounding(lm_list, holds_bounding_box):
+          if check_coord_bounding(lm_list, holds_bounding_box, h, w):
             total_distance += compute_distance(prev, lm_list)
             num_moves = num_moves + 1
           print("Similarity found and coordinates stored")
@@ -248,7 +280,7 @@ def main(cap):
   print('F-1 Score: ', f1_score)
 
 if __name__ == "__main__":
-    main(cap)
+    main(cap, cap_holds)
 
 def get_last_frame_cordinates(cap):
   last_frame_cordinates = []
