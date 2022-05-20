@@ -1,3 +1,16 @@
+"""
+Script for training a wall-segmentor on the datasets
+provided in the Repository.
+
+This wall-segmentor is used to improve hold detection
+by removing extraneous holds.
+
+From the root of this repository run the following command:
+$ python train_utils train_wall_segmentor.py
+
+This will set up the wall segmentor model in the correct folder
+to be used properly by other modules in this repository.
+"""
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
