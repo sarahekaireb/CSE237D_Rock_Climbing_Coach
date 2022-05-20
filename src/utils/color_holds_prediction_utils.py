@@ -1,5 +1,10 @@
 #! /usr/bin/python
 
+"""
+Utilities to predict colors of already-detected holds
+Holds were likely detected using hold_utils Neural Net API Calls
+"""
+
 import sys
 import cv2
 import numpy as np
