@@ -22,6 +22,7 @@ from math import hypot
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from predict_holds import predict_holds
+from matplotlib import pyplot as plt
 
 # initialize mediapipe requirements
 mpPose = mp.solutions.pose
@@ -41,7 +42,7 @@ excel_path = 'Climb Seconds.xlsx'
 clip_name = 'Clip 3'
 
 # define the cosine similarity threshold 
-threshold = 0.9999
+threshold = 0.99999
 
 # global dict to store the coordiantes (required towards MVP)
 dict_coordinates = {'left_hand': [], 'right_hand': [], 'left_leg': [], 'right_leg': [], 'left_hip': [], 'right_hip': []}
@@ -98,9 +99,9 @@ def compute_distance(list1, list2):
 
 def check_coord_bounding(lm_list, holds_bounding_box, h, w):
   if (check_point_in_box(lm_list[62], lm_list[63], holds_bounding_box, h , w) 
-  and check_point_in_box(lm_list[64], lm_list[65], holds_bounding_box, h , w)):
-    if (check_point_in_box(lm_list[30], lm_list[31], holds_bounding_box, h , w) 
-  and check_point_in_box(lm_list[32], lm_list[33], holds_bounding_box, h , w)):
+  or check_point_in_box(lm_list[64], lm_list[65], holds_bounding_box, h , w)
+  or check_point_in_box(lm_list[30], lm_list[31], holds_bounding_box, h , w) 
+  or check_point_in_box(lm_list[32], lm_list[33], holds_bounding_box, h , w)):
       print("found valid position!!")
       return True
   return False
@@ -168,6 +169,7 @@ def main(cap, cap_holds):
   stored_frames_count = 0
   pTime = 0
   total_distance = 0
+  distances = []
   num_moves = 0
   holds = predict_holds(cap_holds)
   print("holds")
@@ -224,8 +226,10 @@ def main(cap, cap_holds):
         if(result < threshold):
           store_coordinates(lm_list)
           if check_coord_bounding(lm_list, holds_bounding_box, h, w):
-            total_distance += compute_distance(prev, lm_list)
+            curr_dist = compute_distance(prev, lm_list)
+            total_distance += curr_dist
             num_moves = num_moves + 1
+            distances.append(curr_dist)
           print("Similarity found and coordinates stored")
           stored_frames_count += 1
           output_img_list.append(img)
@@ -278,6 +282,13 @@ def main(cap, cap_holds):
   print('Precision: ', precision)
   print('Recall: ', recall)
   print('F-1 Score: ', f1_score)
+  print('Distance per jump:' , distances)
+  plt.plot(distances)
+  plt.xlabel('nth move', labelpad=15)
+  plt.ylabel('Distance', labelpad=15)
+  plt.title('Distance vs nth move')
+  plt.show()
+  plt.savefig('distance_moved.png')
 
 if __name__ == "__main__":
     main(cap, cap_holds)
