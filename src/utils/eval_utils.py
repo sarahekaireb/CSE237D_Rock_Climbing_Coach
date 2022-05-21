@@ -11,9 +11,12 @@ import json
 from hold_utils import *
 
 class HoldEvaluator:
-    def __init__(self, dataset_loc='../../datasets/uncropped_holds_coco'):
+    def __init__(self, method, dataset_loc='../../datasets/uncropped_holds_coco'):
         self.dataset_loc = dataset_loc
         self.modes = ['train', 'test', 'valid']
+        assert method in ['NN', 'color_freq'] # accepted methods of Hold Detection
+        self.method = method
+        self.wall_model = None
         self.load_data()
 
     def load_data(self):
@@ -82,8 +85,13 @@ class HoldEvaluator:
 
     def calculate_dice(self, img, img_annots):
         dice = 0
-        _, response = predict_holds(img)
-        pred_holds = process_hold_response(response) # list of [(x_min, y_min), (y_min, y_max)]
+        if self.method == 'NN':
+            pred_holds, colors = predict_NN_holds_colors(img)
+        elif self.method == 'color_freq':
+            pred_holds, colors, wall_model = predict_CV_holds_colors(img, wall_model=self.wall_model)
+            self.wall_model = wall_model
+        # _, response = predict_holds(img)
+        # pred_holds = process_hold_response(response) # list of [(x_min, y_min), (y_min, y_max)]
         true_holds = self.annot_to_holds(img_annots) # list of [(x_min, y_min), (y_min, y_max)]
 
         pred_mask = self.holds_to_mask(img, pred_holds) # H x W
@@ -112,15 +120,13 @@ class HoldEvaluator:
         mean_dice = mean_dice / num_images
         return mean_dice
             
-            
-
-
-
-# class Evaluator:
-#     def __init__(self):
-#         self.hold_evaluator = HoldEvaluator()
 
 if __name__ == '__main__':
-    h_eval = HoldEvaluator()
-    avg_dice = h_eval.evaluate()
-    print("Average DICE: ", avg_dice)
+    h_NN_eval = HoldEvaluator(method='NN')
+    NN_avg_dice = h_NN_eval.evaluate()
+
+    h_CV_eval = HoldEvaluator(method='color_freq')
+    CV_avg_dice = h_CV_eval.evaluate()
+
+    print("\nAverage NN DICE: ", NN_avg_dice)
+    print("Average CV DICE: ", CV_avg_dice)
