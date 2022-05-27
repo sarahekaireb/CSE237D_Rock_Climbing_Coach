@@ -8,13 +8,18 @@ import numpy as np
 import cv2
 import json
 
+from video_utils import *
+from pose_utils import *
 from hold_utils import *
+from pc_complete_utils import compute_percent_complete
+
+import gc
 
 class HoldEvaluator:
     def __init__(self, method, dataset_loc='../../datasets/uncropped_holds_coco'):
         self.dataset_loc = dataset_loc
         self.modes = ['train', 'test', 'valid']
-        assert method in ['NN', 'color_freq'] # accepted methods of Hold Detection
+        assert method in ['NN', 'color_freq', 'NN_wall'] # accepted methods of Hold Detection
         self.method = method
         self.wall_model = None
         self.load_data()
@@ -90,6 +95,8 @@ class HoldEvaluator:
         elif self.method == 'color_freq':
             pred_holds, colors, wall_model = predict_CV_holds_colors(img, wall_model=self.wall_model)
             self.wall_model = wall_model
+        elif self.method == 'NN_wall':
+            pred_holds, colors, wall_model = predict_NN_holds_removeWall(img, wall_model=self.wall_model)
         # _, response = predict_holds(img)
         # pred_holds = process_hold_response(response) # list of [(x_min, y_min), (y_min, y_max)]
         true_holds = self.annot_to_holds(img_annots) # list of [(x_min, y_min), (y_min, y_max)]
@@ -119,14 +126,18 @@ class HoldEvaluator:
         
         mean_dice = mean_dice / num_images
         return mean_dice
-            
 
 if __name__ == '__main__':
+    # Hold Evaluation
     h_NN_eval = HoldEvaluator(method='NN')
     NN_avg_dice = h_NN_eval.evaluate()
 
     h_CV_eval = HoldEvaluator(method='color_freq')
     CV_avg_dice = h_CV_eval.evaluate()
 
+    h_NN_wall_eval = HoldEvaluator(method='NN_wall')
+    NN_wall_avg_dice = h_NN_wall_eval.evaluate()
+
     print("\nAverage NN DICE: ", NN_avg_dice)
     print("Average CV DICE: ", CV_avg_dice)
+    print("Average NN Wall Remove DICE: ", NN_wall_avg_dice)

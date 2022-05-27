@@ -116,3 +116,26 @@ def predict_CV_holds_colors(rgb_img, wall_model=None):
     wall_mask, wall_model = get_wall_mask(rgb_img, wall_model=wall_model) # keep wall model to prevent needing to reload model
     holds, colors, contours = all_colors_segment(rgb_img, wall_mask)
     return holds, colors, wall_model
+
+def filter_holds(holds, wall_mask):
+    # holds is list(list(tuple))
+    # wall_mask H x W black/white mask
+    filtered_holds = []
+    for hold in holds:
+        hold_min, hold_max = hold
+        x_min, y_min = hold_min
+        x_max, y_max = hold_max
+        cx = int(((x_max - x_min) / 2) + x_min)
+        cy = int(((y_max - y_min) / 2) + y_min)
+
+        if wall_mask[cy][cx] > 0:
+            filtered_holds.append(hold)
+    return filtered_holds
+
+def predict_NN_holds_removeWall(rgb_img, wall_model=None):
+    wall_mask, wall_model = get_wall_mask(rgb_img, wall_model=wall_model)
+    holds, colors = predict_NN_holds_colors(rgb_img)
+    # remove holds outside of wall mask
+    holds = filter_holds(holds, wall_mask)
+    return holds, colors, wall_model
+
