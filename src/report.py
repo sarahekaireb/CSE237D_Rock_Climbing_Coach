@@ -19,13 +19,31 @@ from utils.pc_complete_utils import compute_percent_complete, compute_percent_co
 NEW_WIDTH = 576
 NEW_HEIGHT = 1080
 
+# globals to be used for total time elapsed in pose_estimation.py
+raw_vid = None
+climb_holds = None
+joint_positions = None
+
 def get_parser():
     parser = argparse.ArgumentParser(description='Run script to produce a report from a climb video')
     parser.add_argument('-d', '--dir', type=str, default='../test_data',
                         help='filepath of climb video and hold image for generating report.txt')
     return parser
 
+# define Namespace to mimic the use of parser -> used towards total time elapsed in pose_estimation.py
+class Namespace:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+# return global raw_vid, climb_holds, joint_positions objects post running main -> used in pose_estimation.py
+def retrieve_objects(dir_path):
+    global raw_vid, climb_holds, joint_positions
+    namespace = Namespace(dir = dir_path)
+    main(namespace)
+    return raw_vid, climb_holds, joint_positions
+
 def main(args):
+    global raw_vid, climb_holds, joint_positions
     files = os.listdir(args.dir)
     assert 'climb.mp4' in files
     assert 'holds.jpg' in files

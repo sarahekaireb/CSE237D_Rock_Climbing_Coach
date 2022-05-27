@@ -8,6 +8,7 @@ Original file is located at
 """
 
 # !pip install mediapipe
+# !pip install requests_toolbelt
 
 # from google.colab import drive
 # drive.mount('/content/drive')
@@ -23,6 +24,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from predict_holds import predict_holds
 from matplotlib import pyplot as plt
+from src.report import retrieve_objects
 
 # initialize mediapipe requirements
 mpPose = mp.solutions.pose
@@ -40,6 +42,9 @@ excel_path = 'Climb Seconds.xlsx'
 
 # input clip name, format: Clip 2 -> the format has to correspond with the sheet name in excel file
 clip_name = 'Clip 3'
+
+# input directory path including both image and video -> to be used for total time elapsed
+dir_path = 'rock_dataset_0/clip2'
 
 # define the cosine similarity threshold 
 threshold = 0.99999
@@ -162,6 +167,69 @@ def parse_holds(holds):
 
   return bounding_boxes
 
+def joint_in_hold(joint, hold):
+    # joint is (x, y)
+    # hold is [(x_min, y_min), (x_max, y_max)]
+    jx, jy = joint
+    h_xmin, h_ymin = hold[0]
+    h_xmax, h_ymax = hold[1]
+    
+    if jx <= h_xmax and jx >= h_xmin and jy <= h_ymax and jy >= h_ymin:
+        return True
+    else:
+        return False
+
+def compute_time_elapsed(fps, total_elapsed_time_ground_truth):
+  # retrieve the objects from report.py
+  raw_vid, climb_holds, joint_positions = retrieve_objects(dir_path)
+  
+  # compute the first frame such that both hands are on some hold
+  start_frame = -1
+  start_flag = False
+  # prepare a zipped list from left_hand and right_hand positions
+  hands_zipped = list(zip(joint_positions['left_hand'], joint_positions['right_hand']))
+  # loop through each frame in raw_vid
+  for frame_index in range(raw_vid.shape[0]):
+    # compute left hand and right hand positions
+    left_hand, right_hand = hands_zipped[frame_index]
+    # loop through the holds
+    for hold_index in range(len(climb_holds)):
+      if (joint_in_hold(left_hand, climb_holds[hold_index]) and joint_in_hold(right_hand, climb_holds[hold_index])):
+        start_frame = frame_index
+        start_flag = True
+        break
+    if(start_flag):
+      break
+
+  # compute the last frame, i.e., the frame in which the positions of hips is the highest
+  end_frame = -1
+  # (0,0) starts at top left, hence the least y (closest to 0 y coordinate) will represent max height
+  min_hip_y_pos = 99999
+  # prepare a zipped list from left_hand and right_hand positions
+  hips_zipped = list(zip(joint_positions['left_hip'], joint_positions['right_hip']))
+  # loop through each set of hip coordinate
+  for frame_index in range(len(hips_zipped)):
+    left_hip, right_hip = hips_zipped[frame_index]
+    # taking mid point gives wrong results, hence take the max of left_hip, right_hip
+    hip_y_pos = min(left_hip[1], right_hip[1])
+    if hip_y_pos <= min_hip_y_pos:
+      min_hip_y_pos = hip_y_pos
+      end_frame = frame_index
+
+  # check for validity
+  if (start_frame == -1 or end_frame == -1):
+    print('Couldn\'t compute the total elapsed time: check the logic')
+    return total_elapsed_time_ground_truth
+  
+  else:
+    # compute the total time elapsed
+    total_time_elapsed_predicted = (end_frame - start_frame + 1)/fps;
+    # compute the accuracy of prediction
+    error_rate = abs(total_elapsed_time_ground_truth - total_time_elapsed_predicted)/ total_elapsed_time_ground_truth
+    accuracy = 1 - error_rate
+
+    return total_time_elapsed_predicted, accuracy
+
 def main(cap, cap_holds):
   prev = []
   output_img_list = []
@@ -180,7 +248,7 @@ def main(cap, cap_holds):
 
   # required for time elapased and accuracy computation
   fps = cap.get(cv2.CAP_PROP_FPS) # note that this fps is constant (we shot the videos at 30 fps)
-
+  
   while True:
     print('----------------------')
     print('Processing a new frame')
@@ -246,10 +314,14 @@ def main(cap, cap_holds):
   
   # compute the total time elapsed -> required for masking the raw predictions and raw ground truth labels
   total_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-  total_elapsed_time = total_frame_count/fps
+  total_elapsed_time_ground_truth = total_frame_count/fps
+  total_time_elapsed_predicted, accuracy_time_elapsed = compute_time_elapsed(fps, total_elapsed_time_ground_truth)
   
   print('---------- Processsing Completed ----------')
-  print('Total elapsed time: ', total_elapsed_time)
+  # using total_elapsed_time_ground_truth instead of predicted for now
+  print('Total elapsed time (ground truth): ', total_elapsed_time_ground_truth)
+  print('Total elapsed time (predicted): ', total_time_elapsed_predicted)
+  print('Accuracy for total elapsed time : ', accuracy_time_elapsed)
   print('Total frames processed: ', total_frame_count)
   print('Total frames stored: ', stored_frames_count)
   print('Total distance covered (in pixels): ', total_distance)
@@ -275,8 +347,8 @@ def main(cap, cap_holds):
   # retieve ground truth labels (from raw_ground_truth_dict) only for the current clip 
   raw_ground_truth_labels = raw_ground_truth_dict[clip_name]
 
-  # retrieve the evaluation metric scores
-  accuracy, precision, recall, f1_score = compute_scores(raw_predictions, raw_ground_truth_labels, int(total_elapsed_time))
+  # retrieve the evaluation metric scores, using total_elapsed_time_ground_truth instead of predicted for now
+  accuracy, precision, recall, f1_score = compute_scores(raw_predictions, raw_ground_truth_labels, int(total_elapsed_time_ground_truth))
   print('Cosine similarity threshold used: ', threshold)
   print('Accuracy: ', accuracy)
   print('Precision: ', precision)
@@ -297,7 +369,7 @@ def get_last_frame_cordinates(cap):
   last_frame_cordinates = []
 
   #Run code on input video - cap and store coordinates of all frames in dict_coordinates
-  main(cap)
+  main(cap, cap_holds)
 
   #Return last frame coordinates
   last_frame_cordinates.append(dict_coordinates['left_hand'][-1])
