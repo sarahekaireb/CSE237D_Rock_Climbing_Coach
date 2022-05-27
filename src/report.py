@@ -13,7 +13,7 @@ import argparse
 from utils.video_utils import *
 from utils.pose_utils import *
 from utils.hold_utils import *
-from utils.report_utils import compute_percent_complete
+from utils.pc_complete_utils import compute_percent_complete, compute_percent_complete_color
 
 # constants for cropping video
 NEW_WIDTH = 576
@@ -25,10 +25,7 @@ def get_parser():
                         help='filepath of climb video and hold image for generating report.txt')
     return parser
 
-if __name__ == '__main__':
-    parser = get_parser()
-    args = parser.parse_args()
-
+def main(args):
     files = os.listdir(args.dir)
     assert 'climb.mp4' in files
     assert 'holds.jpg' in files
@@ -43,15 +40,22 @@ if __name__ == '__main__':
     raw_vid = raw_vid.take(frames, axis=0)
     significances = get_significant_frames(landmarks_arr)
 
-    # hold information
-    status, response = predict_holds(hold_img)
-    assert status.status_code == 200 # successful response
-    climb_holds = process_hold_response(response)
-
-    percent_complete = compute_percent_complete(climb_holds, joint_positions)
+    climb_holds, hold_colors = predict_NN_holds_colors(hold_img)
+    try:
+        assert len(climb_holds) == len(hold_colors)
+    except:
+        print("{} Holds".format(len(climb_holds)))
+        print("{} Colors".format(len(hold_colors)))
+        print(hold_colors)
+        print(climb_holds)
+        raise AssertionError("Each hold does not have an associated color")
+    # percent_complete = compute_percent_complete(climb_holds, joint_positions)
+    percent_complete = compute_percent_complete_color(climb_holds, hold_colors, joint_positions)
     print("Completed ", str(percent_complete) + '% of climb')
 
 
+if __name__ == '__main__':
+    parser = get_parser()
+    args = parser.parse_args()
 
-
-
+    main(args)

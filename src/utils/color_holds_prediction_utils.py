@@ -51,7 +51,7 @@ color_dict_HSV = {'black': [[180, 255, 39], [0, 0, 0]],
 
 def kmean_centers(img):
 	#plt.imshow(img)
-	plt.show()
+	# plt.show()
 	data = np.reshape(img, (-1,3))
 	#print(data.shape)
 	data = np.float32(data)
@@ -94,11 +94,11 @@ def getholdcolor(centers):
 		return colors[0]
 
 
-def getAllHoldColors(fn, holds):
-	# open image, convert
-	img = cv2.imread(fn)
-	img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-	img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+def getAllHoldColors(rgb_img, holds):
+	# # open image, convert
+	# img = cv2.imread(fn)
+	# img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+	img = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2HSV)
 	colors = []
 	for h in holds:
 		x_low, y_low = h[0]
@@ -109,7 +109,7 @@ def getAllHoldColors(fn, holds):
 			colors.append('red')
 		else:
 			colors.append(color)
-	return holds, colors
+	return colors
 
 
 def draw_bounds(holds, colors, rgb_img):
