@@ -10,7 +10,7 @@ import json
 
 from video_utils import *
 from pose_utils import *
-from hold_utils import *
+from hold_utils import predict_CV_holds_colors, predict_NN_holds_removeWall, predict_NN_holds_colors
 from pc_complete_utils import compute_percent_complete
 
 import gc
@@ -96,7 +96,7 @@ class HoldEvaluator:
             pred_holds, colors, wall_model = predict_CV_holds_colors(img, wall_model=self.wall_model)
             self.wall_model = wall_model
         elif self.method == 'NN_wall':
-            pred_holds, colors, wall_model = predict_NN_holds_removeWall(img, wall_model=self.wall_model)
+            pred_holds, colors, self.wall_model = predict_NN_holds_removeWall(img, wall_model=self.wall_model)
         # _, response = predict_holds(img)
         # pred_holds = process_hold_response(response) # list of [(x_min, y_min), (y_min, y_max)]
         true_holds = self.annot_to_holds(img_annots) # list of [(x_min, y_min), (y_min, y_max)]

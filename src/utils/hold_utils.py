@@ -8,9 +8,9 @@ from PIL import Image
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import argparse
 
-from .color_range_analysis_utils import all_colors_segment
-from .train_utils.model_factory import get_segmentation_model
-from .color_holds_prediction_utils import getAllHoldColors
+from color_range_analysis_utils import all_colors_segment
+from train_utils.model_factory import get_segmentation_model
+from color_holds_prediction_utils import getAllHoldColors
 
 # remove from script when publishing to GitHub
 MODEL = 'hold-detection'
@@ -99,7 +99,7 @@ def get_wall_mask(rgb_img, wall_model=None, wall_model_loc='../../models/wall_se
         preds = dic['out'] # N x C x H x W
         preds = torch.argmax(preds, dim=1, keepdim=False) # N x H x W
         mask = preds[0].unsqueeze(2).repeat(1, 1, 3)
-        mask = (mask.cpu().numpy() * 255).astype(np.uint8) # H x W
+        mask = (mask.cpu().numpy() * 255).astype(np.uint8) # H x W X 3
     
     return mask, wall_model
 
@@ -128,7 +128,7 @@ def filter_holds(holds, wall_mask):
         cx = int(((x_max - x_min) / 2) + x_min)
         cy = int(((y_max - y_min) / 2) + y_min)
 
-        if wall_mask[cy][cx] > 0:
+        if (wall_mask[cy][cx] > 0).all():
             filtered_holds.append(hold)
     return filtered_holds
 
