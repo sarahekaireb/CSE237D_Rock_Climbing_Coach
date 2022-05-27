@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+from PIL import Image
 
 # HSV color ranges
 color_dict_HSV = {'black': [[180, 255, 44], [0, 0, 0]],
@@ -172,33 +173,30 @@ def filter_bounds(all_holds, all_colors, all_contours):
 	return new_holds, new_colors, new_contours
 
 
-def all_colors_segment(fn, m_fn=None):
+def all_colors_segment(rgb_img, mask):
 	"""
-    Takes in a file name for a hold wall, and a file name for wall mask and segments image based on colors
+    Takes in an RGB Image of a hold wall, and a wall mask and segments image based on colors
 
     returns: list(list(tuples)) each sublist is [(x_min, y_min), (x_max, y_max)]
                 and represents a single hold
              list(strings) where each string is the name of a color
     """
 
-	# Reading the image
-	img = cv2.imread(fn)
-	# Convert to rgb
-	rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+	# # Reading the image
+	# img = cv2.imread(fn)
+	# # Convert to rgb
+	# rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-	# mask
-	if m_fn:
-		mask = cv2.imread(m_fn)
+	#define kernel size  
+	kernel = np.ones((23,23),np.uint8)
+	# Remove unnecessary noise from mask
+	mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+	mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+	# mask sum increases during this noise removal?
 
-		#define kernel size  
-		kernel = np.ones((23,23),np.uint8)
-		# Remove unnecessary noise from mask
-		mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-		mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
-		rgb_img = cv2.bitwise_and(mask, rgb_img)
-		plt.imshow(rgb_img)
-		plt.show()
+	rgb_img = cv2.bitwise_and(mask, rgb_img)
+	# plt.imshow(rgb_img)
+	# plt.show()
 
 	# Show original image
 	#plt.imshow(rgb_img)
@@ -221,10 +219,10 @@ def all_colors_segment(fn, m_fn=None):
 
 	all_holds, all_colors, all_contours = filter_bounds(all_holds, all_colors, all_contours)
 
-	draw_contours(all_contours, all_colors, rgb_img)
+	# draw_contours(all_contours, all_colors, rgb_img)
 
-	rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-	draw_bounds(all_holds, all_colors, rgb_img)
+	# rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+	# draw_bounds(all_holds, all_colors, rgb_img)
 
 	# returns list of holds and corresponding list with the color of each hold
 	return all_holds, all_colors, all_contours
