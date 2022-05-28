@@ -38,7 +38,23 @@ def getMostFrequentHoldColor(holds_used, holds, colors):
 
 	return color_route
 
-def getColorRoute(holds_used, holds, colors, mode = 'freq'):
+def getMostFrequentHoldColorHovered(holds_used, holds, colors):
+	"""
+	Gets the most frequent color hold used
+	""" 
+
+	hold_colors_used = []
+	for i in range(len(holds_used)):
+		for j in range(len(holds_used[i])):
+			if holds_used[i][j]:
+				hold_colors_used.append(colors[j])
+
+	color_route = max(set(hold_colors_used), key=hold_colors_used.count)
+	print("route of color: " + color_route)
+
+	return color_route
+
+def getColorRoute(holds_used, holds, colors, mode = 'hovered'):
 	"""
 	Gets the color of the route the climber is using
 	"""
@@ -46,6 +62,8 @@ def getColorRoute(holds_used, holds, colors, mode = 'freq'):
 		color_route = getMostFrequentHoldColor(holds_used, holds, colors)
 	elif mode == 'first':
 		color_route = getFirstHoldColor(holds_used, holds, colors)
+	elif mode == 'hovered':
+		color_route = getMostFrequentHoldColorHovered(holds_used, holds, colors)
 
 	return color_route
 
@@ -132,8 +150,7 @@ def joint_in_hold(joint, hold):
 		return False
 
 
-def runMoveValidity(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
-
+def process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
 	# get the video and significant frames
 	video = video_utils.get_video_array(VIDEO_PATH)
 
@@ -149,7 +166,14 @@ def runMoveValidity(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
 
 	climb_holds_used = get_holds_used(holds, joint_positions)
 
-	color_route = getColorRoute(climb_holds_used, holds, colors, mode = 'freq')
+
+	return video, climb_holds_used, holds, colors, frames, results_arr, landmarks_arr, joint_positions, significances
+
+
+def runMoveValidity(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
+	video, climb_holds_used, holds, colors, frames, results_arr, landmarks_arr, joint_positions, significances = process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 0)
+
+	color_route = getColorRoute(climb_holds_used, holds, colors, mode = 'hovered')
 
 	plotted_vid = create_video(video, holds, colors, climb_holds_used, color_route, results_arr, joint_positions, significances)
 
