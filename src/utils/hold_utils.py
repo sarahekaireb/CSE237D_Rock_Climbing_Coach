@@ -8,9 +8,9 @@ from PIL import Image
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import argparse
 
-from .color_range_analysis_utils import all_colors_segment
-from .train_utils.model_factory import get_segmentation_model
-from .color_holds_prediction_utils import getAllHoldColors
+from color_range_analysis_utils import all_colors_segment
+from train_utils.model_factory import get_segmentation_model
+from color_holds_prediction_utils import getAllHoldColors
 
 # remove from script when publishing to GitHub
 MODEL = 'hold-detection'
