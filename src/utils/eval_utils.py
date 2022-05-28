@@ -44,7 +44,7 @@ class HoldEvaluator:
                     if(flag):continue
                     print(img_path)
                     mask_path = img_path.split('/')[-1].split('_')[0][3:]
-                    mask_path = "../../rock_climbing_vids/wall_masks/mask%s.jpg"%mask_path
+                    mask_path = "../../wall_masks/mask%s.jpg"%mask_path
                
                     print(mask_path)
                     mask = cv2.imread(mask_path)

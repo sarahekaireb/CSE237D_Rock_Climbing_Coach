@@ -52,7 +52,7 @@ def all_colors_segment_bbox(roi):
 #     draw_contours(all_contours, all_colors, roi)
 
     # 	rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    draw_bounds(all_holds, all_colors, roi)
+#     draw_bounds(all_holds, all_colors, roi)
 
     # returns list of holds and corresponding list with the color of each hold
     return all_holds, all_colors, all_contours
