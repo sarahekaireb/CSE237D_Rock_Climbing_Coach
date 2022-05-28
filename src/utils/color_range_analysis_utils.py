@@ -172,6 +172,35 @@ def filter_bounds(all_holds, all_colors, all_contours):
 	return new_holds, new_colors, new_contours
 
 
+
+def all_colors_segment_bbox(roi):
+    ksize = (3,3)
+    blur = cv2.blur(roi, ksize, cv2.BORDER_DEFAULT) 
+
+    # run code
+    all_holds = []
+    all_colors = []
+    all_contours = []
+    for color in ['red', 'blue', 'green', 'purple', 'yellow', 'white', 'pink', 'black', 'orange']:
+        mask = segment_color(color, blur)
+        holds, contours = find_bounds(mask)
+        all_contours += contours
+        all_holds += holds 
+        all_colors += [color]*len(holds)
+
+    all_holds, all_colors, all_contours = filter_bounds(all_holds, all_colors, all_contours)
+
+#     draw_contours(all_contours, all_colors, roi)
+
+    # 	rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    draw_bounds(all_holds, all_colors, roi)
+
+    # returns list of holds and corresponding list with the color of each hold
+    return all_holds, all_colors, all_contours
+
+    
+
+
 def all_colors_segment(fn, m_fn=None):
 	"""
     Takes in a file name for a hold wall, and a file name for wall mask and segments image based on colors
@@ -229,3 +258,59 @@ def all_colors_segment(fn, m_fn=None):
 	# returns list of holds and corresponding list with the color of each hold
 	return all_holds, all_colors, all_contours
 
+def correctHolds(img):
+    _,holds = ml.predict_holds(img)
+    holds = ml.process_hold_response(holds)
+    _,mlcolors = mlpred.getAllHoldColors(img,holds)
+    # colors = ["black"]*len(holds)
+    colors2 = ["red"]*len(color_holds)
+    newHolds = []
+    newColors = []
+    # img = mlpred.draw_bounds(holds,colors2,img)
+    # img = mlpred.draw_bounds(color_holds,colors,img)
+    for j in range(len(holds)):
+        hold = holds[j]
+        print("ml color ",mlcolors[j])
+        xmin,ymin = hold[0]
+        xmax,ymax = hold[1]
+        # print("(%d,%d),(%d,%d)"%(xmin,xmax,ymin,ymax))
+        roi = img[ymin:ymax,xmin:xmax]
+        cholds,ccolors,contours = cvpred.all_colors_segment_bbox(roi)
+        mask = cvpred.segment_color(mlcolors[j],roi)
+        holds1, contours = cvpred.find_bounds(mask)
+        cvpred.draw_bounds(holds1,[mlcolors[j]]*len(holds1),roi)
+        maxArea = 0
+        idx = -1
+        ci = None
+        print(len(cholds))
+        if(len(cholds)==0):
+            newHolds.append(hold)
+            newColors.append("black")
+            continue
+        for i in range(len(cholds)):
+            h = cholds[i]
+            x1,y1 = h[0]
+            x2,y2 = h[1]
+            W = x2-x1
+            H = y2-y1
+            a = W*H
+            print(a)
+            if(a>maxArea):
+                maxArea = a
+                idx = i
+                ci = ccolors[i]
+        x1,y1 = cholds[idx][0]
+        x2,y2 = cholds[idx][1]
+        print("Max area ",maxArea,"index",idx)
+        percentage = 100*maxArea/((xmax-xmin)*(ymax-ymin))
+        print("Percentage covered ",100*maxArea/((xmax-xmin)*(ymax-ymin)))
+        if(percentage>35):
+            newHolds.append([(xmin+x1,ymin+y1),(xmin+x2,ymin+y2)])
+        else:
+            newHolds.append(hold)
+            
+        # print("(%d,%d),(%d,%d)"%(xmin,xmax,ymin,ymax))
+    #     plt.imshow(roi)
+        
+        newColors.append(ci)
+    return newHolds
