@@ -1,0 +1,13 @@
+NAME COLOR_ROUTE
+clip1 purple
+clip2 purple
+clip3 red
+clip4 red
+clip5 blue
+clip6 black
+clip7 blue
+clip8 red
+clip9 green
+clip10 green
+clip11 black
+clip12 black
