@@ -31,6 +31,35 @@ color_dict_rgb = {'blue': (20, 20, 255),
 				'darkgray':(70,70,70)
 				}
 
+
+def all_colors_segment_bbox(roi):
+    ksize = (3,3)
+    blur = cv2.blur(roi, ksize, cv2.BORDER_DEFAULT) 
+
+    # run code
+    all_holds = []
+    all_colors = []
+    all_contours = []
+    for color in ['red', 'blue', 'green', 'purple', 'yellow', 'white', 'pink', 'black', 'orange']:
+        mask = segment_color(color, blur)
+        holds, contours = find_bounds(mask)
+        all_contours += contours
+        all_holds += holds 
+        all_colors += [color]*len(holds)
+
+    all_holds, all_colors, all_contours = filter_bounds(all_holds, all_colors, all_contours)
+
+#     draw_contours(all_contours, all_colors, roi)
+
+    # 	rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    draw_bounds(all_holds, all_colors, roi)
+
+    # returns list of holds and corresponding list with the color of each hold
+    return all_holds, all_colors, all_contours
+
+    
+
+
 def segment_color(color, rgb_img):
 	"""
 	Segments a color out of the image
