@@ -247,5 +247,5 @@ def predict_CV_holds_colors(rgb_img, wall_model=None):
     # use color freq to get holds, etc
     # return holds
     wall_mask, wall_model = get_wall_mask(rgb_img, wall_model=wall_model) # keep wall model to prevent needing to reload model
-    holds, colors, contours = all_colors_segment(rgb_img, wall_mask)
+    holds, colors, contours = all_colors_segment(rgb_img, wall_mask, isMask = True)
     return holds, colors, wall_model

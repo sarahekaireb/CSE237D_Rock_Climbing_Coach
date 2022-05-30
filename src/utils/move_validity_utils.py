@@ -4,6 +4,7 @@ import cv2
 import video_utils
 import pose_utils
 import hold_utils
+import color_range_analysis_utils
 import numpy as np
 import mediapipe as mp
 
@@ -150,7 +151,7 @@ def joint_in_hold(joint, hold):
 		return False
 
 
-def process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
+def process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 'cv'):
 	# get the video and significant frames
 	video = video_utils.get_video_array(VIDEO_PATH)
 
@@ -160,9 +161,16 @@ def process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
 
 	# get the holds and colors
 	# using ml
-	if hd_mode == 0:
-		hold_img = cv2.cvtColor(cv2.imread(HOLDS_PATH), cv2.COLOR_BGR2RGB)
+	if hd_mode == 'ml':
+		print("ml")
+		hold_img = video[0]
+		#hold_img = cv2.cvtColor(cv2.imread(HOLDS_PATH), cv2.COLOR_BGR2RGB)
 		holds, colors = hold_utils.predict_NN_holds_colors(hold_img)
+	else:
+		print("cv")
+		hold_img = video[0]
+		#hold_img = cv2.cvtColor(cv2.imread(HOLDS_PATH), cv2.COLOR_BGR2RGB)
+		holds, colors, contours = color_range_analysis_utils.all_colors_segment(hold_img)
 
 	climb_holds_used = get_holds_used(holds, joint_positions)
 
@@ -170,10 +178,12 @@ def process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
 	return video, climb_holds_used, holds, colors, frames, results_arr, landmarks_arr, joint_positions, significances
 
 
-def runMoveValidity(VIDEO_PATH, HOLDS_PATH, hd_mode = 0):
-	video, climb_holds_used, holds, colors, frames, results_arr, landmarks_arr, joint_positions, significances = process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 0)
+def runMoveValidity(VIDEO_PATH, HOLDS_PATH, hd_mode = 'cv'):
+	video, climb_holds_used, holds, colors, frames, results_arr, landmarks_arr, joint_positions, significances = process_video(VIDEO_PATH, HOLDS_PATH, hd_mode)
 
 	color_route = getColorRoute(climb_holds_used, holds, colors, mode = 'hovered')
+
+	video = video.take(frames, axis=0)
 
 	plotted_vid = create_video(video, holds, colors, climb_holds_used, color_route, results_arr, joint_positions, significances)
 
