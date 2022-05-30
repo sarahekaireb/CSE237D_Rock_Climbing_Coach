@@ -7,11 +7,11 @@ Original file is located at
     https://colab.research.google.com/drive/18INMq8rpmFKCu5vQfK4NgPMPnqW0OJus
 """
 
-# !pip install mediapipe
-# !pip install requests_toolbelt
+#!pip install mediapipe
+#!pip install requests_toolbelt
 
-# from google.colab import drive
-# drive.mount('/content/drive')
+#from google.colab import drive
+#drive.mount('/content/drive')
 
 import cv2
 import mediapipe as mp
@@ -32,22 +32,23 @@ pose = mpPose.Pose()
 mpDraw = mp.solutions.drawing_utils
 
 # input video path
-cap = cv2.VideoCapture('rock_dataset_0/clip2/climb.mp4')
-img = cv2.imread('rock_dataset_0/clip2/holds.jpg')
+cap = cv2.VideoCapture('/content/drive/MyDrive/CSE_237D/rock_dataset2/clip12/cropped.mp4')
+img = cv2.imread('/content/drive/MyDrive/CSE_237D/rock_dataset2/clip12/holds.jpg')
 cap_holds = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
+# input ground truth excel file name (corresponding to Cosine method and Total time elapsed)
+excel_path = '/content/drive/MyDrive/CSE_237D/climb_seconds_test.xlsx'
+excel_path_total_elapsed_time = '/content/drive/MyDrive/CSE_237D/time_elapsed_test.xlsx'
 
-# input ground truth excel file name
-excel_path = 'Climb Seconds.xlsx'
-
-# input clip name, format: Clip 2 -> the format has to correspond with the sheet name in excel file
-clip_name = 'Clip 3'
+# input clip name, format: Clip 2 -> the format has to correspond with the sheet name in both excel file above
+clip_name = 'Clip 12'
 
 # input directory path including both image and video -> to be used for total time elapsed
-dir_path = 'rock_dataset_0/clip2'
+dir_path = '/content/drive/MyDrive/CSE_237D/rock_dataset2/clip12'
+
 
 # define the cosine similarity threshold 
-threshold = 0.99999
+threshold = 0.9999
 
 # global dict to store the coordiantes (required towards MVP)
 dict_coordinates = {'left_hand': [], 'right_hand': [], 'left_leg': [], 'right_leg': [], 'left_hip': [], 'right_hip': []}
@@ -124,7 +125,8 @@ def load_from_excel(excel_path):
   excel_pd = pd.ExcelFile(excel_path)
   raw_ground_truth_dict = {sheet : excel_pd.parse(sheet)['Timings'].tolist() for sheet in excel_pd.sheet_names}
   # print(raw_ground_truth_dict['Clip 2'])
-  return raw_ground_truth_dict
+  total_time_ground_truth_dict = {sheet : excel_pd.parse(sheet)['Timings'].tolist() for sheet in excel_pd.sheet_names}
+  return raw_ground_truth_dict, total_time_ground_truth_dict
 
 # compute accuracy of predictions
 def compute_scores(raw_predictions, raw_ground_truth_labels, total_elapsed_time):
@@ -219,7 +221,7 @@ def compute_time_elapsed(fps, total_elapsed_time_ground_truth):
   # check for validity
   if (start_frame == -1 or end_frame == -1):
     print('Couldn\'t compute the total elapsed time: check the logic')
-    return total_elapsed_time_ground_truth
+    return -1, -1, total_elapsed_time_ground_truth, -1
   
   else:
     # compute the total time elapsed
@@ -228,7 +230,7 @@ def compute_time_elapsed(fps, total_elapsed_time_ground_truth):
     error_rate = abs(total_elapsed_time_ground_truth - total_time_elapsed_predicted)/ total_elapsed_time_ground_truth
     accuracy = 1 - error_rate
 
-    return total_time_elapsed_predicted, accuracy
+    return start_frame, end_frame, total_time_elapsed_predicted, accuracy
 
 def main(cap, cap_holds):
   prev = []
@@ -249,76 +251,106 @@ def main(cap, cap_holds):
   # required for time elapased and accuracy computation
   fps = cap.get(cv2.CAP_PROP_FPS) # note that this fps is constant (we shot the videos at 30 fps)
   
+  # compute the total time elapsed -> required for masking the raw predictions and raw ground truth labels
+  
+  # total_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+  # load the ground truth from excel
+  _, total_time_ground_truth_dict = load_from_excel(excel_path_total_elapsed_time) # each key of the total_time_ground_truth_dict represents a clip and the corresponding value is the list of timesteps
+  
+  # retrieve ground truth labels (from total_time_ground_truth_dict) only for the current clip 
+  start_time_ground_truth = total_time_ground_truth_dict[clip_name][0]
+  start_frame_ground_truth = fps * start_time_ground_truth
+  end_time_ground_truth = total_time_ground_truth_dict[clip_name][1]
+  end_frame_ground_truth = fps * end_time_ground_truth
+
+  # compute total time (ground truth) by subtracting start time from end time
+  total_elapsed_time_ground_truth = end_time_ground_truth - start_time_ground_truth
+
+  # compute total frame count (we output this towards the final results)
+  total_frame_count = fps * total_elapsed_time_ground_truth
+
+  # compute predictions for total time elapsed
+  start_frame_predicted, end_frame_predicted, total_time_elapsed_predicted, accuracy_time_elapsed = compute_time_elapsed(fps, total_elapsed_time_ground_truth)
+  print('----------------------')
+  print('Start Frame (ground truth): ', start_frame_ground_truth)
+  print('End frame (ground truth): ', end_frame_ground_truth)
+  print('Start Frame (predicted): ', start_frame_predicted)
+  print('End frame (predicted): ', end_frame_predicted)
+
   while True:
     print('----------------------')
     print('Processing a new frame')
     success, img = cap.read()
     img, results, main_break_signal = find_pose(img)
-    
+      
     # the signal means that there are no more input frames in the video, and thus the code must terminate
     if (main_break_signal == True):
       break
     
+    # compute the frame number for the current frame
     frame_number = cap.get(cv2.CAP_PROP_POS_FRAMES)
-    elapsed_time = frame_number / fps
-    # cTime = time.time()
-    # fps = 1 / (cTime - pTime)
-    # pTime = cTime
-    print('Elapsed time: ', elapsed_time)
-    lm_list = []
+    print('Current Frame Number: ', frame_number)
 
-    if results.pose_landmarks:     
-      # add all 66 cordinates to lm_list
-      for id, lm in enumerate(results.pose_landmarks.landmark):  
-        h, w, c = img.shape
-        cx, cy = int(lm.x*w), int(lm.y*h)
-        lm_list.append(cx)
-        lm_list.append(cy)
+    # process only those frames which fall within the total time elapsed (i.e., exclude frames preceding and succeeding the actual climb) 
+    if (frame_number >= start_frame_predicted and frame_number <= end_frame_predicted):
+      # compute the elapsed time for current frame
+      elapsed_time = frame_number / fps
+      # cTime = time.time()
+      # fps = 1 / (cTime - pTime)
+      # pTime = cTime
+      print('Elapsed time: ', elapsed_time)
+      lm_list = []
 
-      # for the first frame, compute and store the coordinates
-      if(first_frame_flag == True):
-        store_coordinates(lm_list)
-        print("Similarity found for the first frame and coordinates stored")
-        prev = lm_list
-        first_frame_flag = False
-        stored_frames_count += 1
-        output_img_list.append(img)
-        plot_image(img, results, cx, cy, elapsed_time)
-        raw_predictions.append(int(elapsed_time)) # conversion to int just cuts the decimal part, which is actually the intended behavior followed by ground truth videos
+      if results.pose_landmarks:     
+        # add all 66 cordinates to lm_list
+        for id, lm in enumerate(results.pose_landmarks.landmark):  
+          h, w, c = img.shape
+          cx, cy = int(lm.x*w), int(lm.y*h)
+          lm_list.append(cx)
+          lm_list.append(cy)
 
-
-      # from next frame onwards, first check similarity and then store the coordinates
-      else:
-        result = check_similarity(prev, lm_list) #prev = 66 cordinates, lm_list = 66 cordinates
-        print('Similarity Value:', result)
-        if(result < threshold):
+        # for the first frame, compute and store the coordinates
+        if(first_frame_flag == True):
           store_coordinates(lm_list)
-          if check_coord_bounding(lm_list, holds_bounding_box, h, w):
-            curr_dist = compute_distance(prev, lm_list)
-            total_distance += curr_dist
-            num_moves = num_moves + 1
-            distances.append(curr_dist)
-          print("Similarity found and coordinates stored")
+          print("Similarity found for the first frame and coordinates stored")
+          prev = lm_list
+          first_frame_flag = False
           stored_frames_count += 1
           output_img_list.append(img)
           plot_image(img, results, cx, cy, elapsed_time)
           raw_predictions.append(int(elapsed_time)) # conversion to int just cuts the decimal part, which is actually the intended behavior followed by ground truth videos
-        
-        prev = lm_list
-          
-      print('Prev list: ', prev)
-      print('Length of prev list: ', len(prev))
-      print('LM list: ', lm_list)
-      print('Length of lm_list: ', len(lm_list))
 
-  
-  # compute the total time elapsed -> required for masking the raw predictions and raw ground truth labels
-  total_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-  total_elapsed_time_ground_truth = total_frame_count/fps
-  total_time_elapsed_predicted, accuracy_time_elapsed = compute_time_elapsed(fps, total_elapsed_time_ground_truth)
-  
+
+        # from next frame onwards, first check similarity and then store the coordinates
+        else:
+          result = check_similarity(prev, lm_list) #prev = 66 cordinates, lm_list = 66 cordinates
+          print('Similarity Value:', result)
+          if(result < threshold):
+            store_coordinates(lm_list)
+            if check_coord_bounding(lm_list, holds_bounding_box, h, w):
+              curr_dist = compute_distance(prev, lm_list)
+              total_distance += curr_dist
+              num_moves = num_moves + 1
+              distances.append(curr_dist)
+            print("Similarity found and coordinates stored")
+            stored_frames_count += 1
+            output_img_list.append(img)
+            plot_image(img, results, cx, cy, elapsed_time)
+            raw_predictions.append(int(elapsed_time)) # conversion to int just cuts the decimal part, which is actually the intended behavior followed by ground truth videos
+          
+          prev = lm_list
+            
+        print('Prev list: ', prev)
+        print('Length of prev list: ', len(prev))
+        print('LM list: ', lm_list)
+        print('Length of lm_list: ', len(lm_list))
+
+    # the frame was preceding/succeeding the actual climb
+    else:
+      print('Current frame precedes/succeeds the actual climb - coordinates not stored')
+
   print('---------- Processsing Completed ----------')
-  # using total_elapsed_time_ground_truth instead of predicted for now
+  # using total_time_elapsed_predicted instead of ground truth
   print('Total elapsed time (ground truth): ', total_elapsed_time_ground_truth)
   print('Total elapsed time (predicted): ', total_time_elapsed_predicted)
   print('Accuracy for total elapsed time : ', accuracy_time_elapsed)
@@ -342,13 +374,13 @@ def main(cap, cap_holds):
 
   # computing accuracy
   # load the ground truth from excel
-  raw_ground_truth_dict = load_from_excel(excel_path) # each key of the raw_ground_truth_dict represents a clip and the corresponding value is the list of timesteps
+  raw_ground_truth_dict, _ = load_from_excel(excel_path) # each key of the raw_ground_truth_dict represents a clip and the corresponding value is the list of timesteps
   
   # retieve ground truth labels (from raw_ground_truth_dict) only for the current clip 
   raw_ground_truth_labels = raw_ground_truth_dict[clip_name]
 
-  # retrieve the evaluation metric scores, using total_elapsed_time_ground_truth instead of predicted for now
-  accuracy, precision, recall, f1_score = compute_scores(raw_predictions, raw_ground_truth_labels, int(total_elapsed_time_ground_truth))
+  # retrieve the evaluation metric scores, using total_time_elapsed_predicted instead of ground truth
+  accuracy, precision, recall, f1_score = compute_scores(raw_predictions, raw_ground_truth_labels, int(total_time_elapsed_predicted))
   print('Cosine similarity threshold used: ', threshold)
   print('Accuracy: ', accuracy)
   print('Precision: ', precision)
@@ -380,4 +412,3 @@ def get_last_frame_cordinates(cap):
   last_frame_cordinates.append(dict_coordinates['right_leg'][-1])
   
   return (last_frame_cordinates)
-
