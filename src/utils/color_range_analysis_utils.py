@@ -202,7 +202,7 @@ def filter_bounds(all_holds, all_colors, all_contours):
 	return new_holds, new_colors, new_contours
 
 
-def all_colors_segment(rgb_img, mask):
+def all_colors_segment(rgb_img, mask = None, isMask = False):
 	"""
     Takes in an RGB Image of a hold wall, and a wall mask and segments image based on colors
 
@@ -216,14 +216,15 @@ def all_colors_segment(rgb_img, mask):
 	# # Convert to rgb
 	# rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-	#define kernel size  
-	kernel = np.ones((23,23),np.uint8)
-	# Remove unnecessary noise from mask
-	mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-	mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-	# mask sum increases during this noise removal?
+	if isMask:
+		#define kernel size  
+		kernel = np.ones((23,23),np.uint8)
+		# Remove unnecessary noise from mask
+		mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+		mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+		# mask sum increases during this noise removal?
 
-	rgb_img = cv2.bitwise_and(mask, rgb_img)
+		rgb_img = cv2.bitwise_and(mask, rgb_img)
 	# plt.imshow(rgb_img)
 	# plt.show()
 
