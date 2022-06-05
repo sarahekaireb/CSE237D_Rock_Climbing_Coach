@@ -1,6 +1,8 @@
 import os
 import argparse
 import cv2
+import numpy as np
+import json
 
 from utils.video_utils import get_video_array, crop_video
 from utils.extraction import process_video
@@ -63,6 +65,17 @@ def main(args):
     print("Move Validity: {:.2f}".format(move_validity * 100))
     print("Climb Duration: {} sec".format(time_elapsed))
     print("Total Distance Climbed: {:.2f} px".format(total_distance))
+
+    with open(os.path.join(args.dir, 'report.json'), 'w') as f:
+        to_write = {
+            'pc_complete': percent_complete,
+            'num_moves': num_moves,
+            'hold_validity': np.around(hold_validity * 100, decimals=2),
+            'move_validity': np.around(move_validity * 100, decimals=2),
+            'climb_duration': time_elapsed,
+            'total_distance': np.around(total_distance, decimals=2)
+        }
+        json.dump(to_write, f)
 
 if __name__ == '__main__':
     parser = get_parser()

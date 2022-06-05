@@ -211,18 +211,19 @@ def predict_holds(rgb_img):
 
 def process_color_response(dic):
     if len(dic['predicted_classes']) > 0:
-        return dic['predicted_classes'][0].lower()
-    else:
-        best_color = None
-        best_conf = -np.inf
-        for color_key in dic['predictions']:
-            conf = dic['predictions'][color_key]['confidence']
-            if color_key.lower() == 'unknown':
-                pass
-            elif conf > best_conf:
-                best_color = color_key.lower()
-                best_conf = conf
-        return best_color
+        if dic['predicted_classes'][0].lower() != 'unknown':
+            return dic['predicted_classes'][0].lower()
+
+    best_color = None
+    best_conf = -np.inf
+    for color_key in dic['predictions']:
+        conf = dic['predictions'][color_key]['confidence']
+        if color_key.lower() == 'unknown':
+            pass
+        elif conf > best_conf:
+            best_color = color_key.lower()
+            best_conf = conf
+    return best_color
 
 def predict_color(hold_crop):
     pilImage = Image.fromarray(hold_crop)
