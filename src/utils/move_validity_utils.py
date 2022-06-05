@@ -68,6 +68,50 @@ def getColorRoute(holds_used, holds, colors, mode = 'hovered'):
 
 	return color_route
 
+def getPercentHoldValidity(holds_used, colors, route_color):
+	"""
+	Returns the hold validity : # unique valid holds / # unique holds used
+	"""
+	valid = 0
+	total = 0
+	all_holds_used = np.logical_or.reduce(holds_used)
+	for h in range(len(holds_used[0])):
+		if all_holds_used[h]:
+			total += 1
+			if colors[h] == route_color:
+				valid += 1
+	return valid / total
+
+
+def getPercentMoveValidity(holds_used, colors, route_color):
+	"""
+	Returns the move validity : # valid moves / # total moves
+	"""
+	total = len(holds_used)
+	invalid = 0
+
+	# first position
+	for h in range(len(holds_used[0])):
+		if holds_used[0][h]:
+			if colors[h] != route_color:
+				invalid += 1
+				break
+
+	# remaining moves
+	for i in range(len(holds_used)-1):
+		p0 = holds_used[i]
+		p1 = holds_used[i+1]
+		for h in range(len(holds_used[0])):
+			if p1[h] and not p0[h]:
+				if colors[h] != route_color:
+					invalid += 1
+					break
+
+	return (total - invalid) / total
+
+
+
+
 
 def create_video(vid_arr, holds, colors, holds_used, color_route, pose_results, dict_coordinates, frame_significances):
 	"""
@@ -196,6 +240,10 @@ def runMoveValidity(VIDEO_PATH, HOLDS_PATH, hd_mode = 'cv'):
 		out.write(cv2.cvtColor(plotted_vid[i], cv2.COLOR_RGB2BGR))
 
 	out.release()
+
+	hold_validity = getPercentHoldValidity(climb_holds_used, holds, colors, color_route)
+
+	print("hold validity : ", hold_validity)
 
 	return plotted_vid
 
