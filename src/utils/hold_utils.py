@@ -7,10 +7,10 @@ import requests
 from PIL import Image
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import argparse
-import color_range_analysis_utils as cvpred
-from color_range_analysis_utils import all_colors_segment
-from train_utils.model_factory import get_segmentation_model
-from color_holds_prediction_utils import getAllHoldColors
+import utils.color_range_analysis_utils as cvpred
+from utils.color_range_analysis_utils import all_colors_segment
+from utils.train_utils.model_factory import get_segmentation_model
+from utils.color_holds_prediction_utils import getAllHoldColors
 
 # remove from script when publishing to GitHub
 MODEL = 'hold-detection'
@@ -50,7 +50,7 @@ def correctHolds(img,wall):
         maxArea = 0
         idx = -1
         ci = None
-        print(len(cholds))
+        # print(len(cholds))
         if(len(cholds)==0):
             newHolds.append(hold)
             newColors.append("black")
@@ -62,7 +62,7 @@ def correctHolds(img,wall):
             W = x2-x1
             H = y2-y1
             a = W*H
-            print(a)
+            # print(a)
             if(a>maxArea):
                 maxArea = a
                 idx = i
@@ -84,70 +84,70 @@ def correctHolds(img,wall):
     #     plt.imshow(roi)
         
         newColors.append(ci)
-    return newHolds
+    return newHolds, newColors
 
 
 
-def correctHolds_2(img):
-#     _,holds =predict_holds(img)
-#     holds = process_hold_response(holds)
-    holds, mlcolors = predict_NN_holds_colors(img)
-#     _,mlcolors = mlcolors
-    print("holds",holds)
-    print("mlcolors",mlcolors)
-#     _,mlcolors = mlpred.getAllHoldColors(img,holds)
-    # colors = ["black"]*len(holds)
-#     colors2 = ["red"]*len(color_holds)
-    newHolds = []
-    newColors = []
-    # img = mlpred.draw_bounds(holds,colors2,img)
-    # img = mlpred.draw_bounds(color_holds,colors,img)
-    for j in range(len(holds)):
-        hold = holds[j]
-        print("ml color ",mlcolors[j])
-        xmin,ymin = hold[0]
-        xmax,ymax = hold[1]
-        # print("(%d,%d),(%d,%d)"%(xmin,xmax,ymin,ymax))
-        roi = img[ymin:ymax,xmin:xmax]
-#         cholds,ccolors,contours = cvpred.all_colors_segment_bbox(roi)
-        mask = cvpred.segment_color(mlcolors[j],roi)
-        cholds, contours = cvpred.find_bounds(mask)
-#         cvpred.draw_bounds(holds1,[mlcolors[j]]*len(holds1),roi)
-        maxArea = 0
-        idx = -1
-        ci = None
-        print(len(cholds))
-        if(len(cholds)==0):
-            newHolds.append(hold)
-            newColors.append("black")
-            continue
-        for i in range(len(cholds)):
-            h = cholds[i]
-            x1,y1 = h[0]
-            x2,y2 = h[1]
-            W = x2-x1
-            H = y2-y1
-            a = W*H
-            print(a)
-            if(a>maxArea):
-                maxArea = a
-                idx = i
-#                 ci = ccolors[i]
-        x1,y1 = cholds[idx][0]
-        x2,y2 = cholds[idx][1]
-        print("Max area ",maxArea,"index",idx)
-        percentage = 100*maxArea/((xmax-xmin)*(ymax-ymin))
-        print("Percentage covered ",100*maxArea/((xmax-xmin)*(ymax-ymin)))
-        if(percentage>52):
-            newHolds.append([(xmin+x1,ymin+y1),(xmin+x2,ymin+y2)])
-        else:
-            newHolds.append(hold)
+# def correctHolds_2(img):
+# #     _,holds =predict_holds(img)
+# #     holds = process_hold_response(holds)
+#     holds, mlcolors = predict_NN_holds_colors(img)
+# #     _,mlcolors = mlcolors
+#     print("holds",holds)
+#     print("mlcolors",mlcolors)
+# #     _,mlcolors = mlpred.getAllHoldColors(img,holds)
+#     # colors = ["black"]*len(holds)
+# #     colors2 = ["red"]*len(color_holds)
+#     newHolds = []
+#     newColors = []
+#     # img = mlpred.draw_bounds(holds,colors2,img)
+#     # img = mlpred.draw_bounds(color_holds,colors,img)
+#     for j in range(len(holds)):
+#         hold = holds[j]
+#         print("ml color ",mlcolors[j])
+#         xmin,ymin = hold[0]
+#         xmax,ymax = hold[1]
+#         # print("(%d,%d),(%d,%d)"%(xmin,xmax,ymin,ymax))
+#         roi = img[ymin:ymax,xmin:xmax]
+# #         cholds,ccolors,contours = cvpred.all_colors_segment_bbox(roi)
+#         mask = cvpred.segment_color(mlcolors[j],roi)
+#         cholds, contours = cvpred.find_bounds(mask)
+# #         cvpred.draw_bounds(holds1,[mlcolors[j]]*len(holds1),roi)
+#         maxArea = 0
+#         idx = -1
+#         ci = None
+#         print(len(cholds))
+#         if(len(cholds)==0):
+#             newHolds.append(hold)
+#             newColors.append("black")
+#             continue
+#         for i in range(len(cholds)):
+#             h = cholds[i]
+#             x1,y1 = h[0]
+#             x2,y2 = h[1]
+#             W = x2-x1
+#             H = y2-y1
+#             a = W*H
+#             print(a)
+#             if(a>maxArea):
+#                 maxArea = a
+#                 idx = i
+# #                 ci = ccolors[i]
+#         x1,y1 = cholds[idx][0]
+#         x2,y2 = cholds[idx][1]
+#         print("Max area ",maxArea,"index",idx)
+#         percentage = 100*maxArea/((xmax-xmin)*(ymax-ymin))
+#         print("Percentage covered ",100*maxArea/((xmax-xmin)*(ymax-ymin)))
+#         if(percentage>52):
+#             newHolds.append([(xmin+x1,ymin+y1),(xmin+x2,ymin+y2)])
+#         else:
+#             newHolds.append(hold)
             
-        # print("(%d,%d),(%d,%d)"%(xmin,xmax,ymin,ymax))
-    #     plt.imshow(roi)
+#         # print("(%d,%d),(%d,%d)"%(xmin,xmax,ymin,ymax))
+#     #     plt.imshow(roi)
         
-        newColors.append(ci)
-    return newHolds
+#         newColors.append(ci)
+#     return newHolds
 
 
 def process_hold_response(dic):
@@ -204,7 +204,7 @@ def predict_NN_holds_colors(rgb_img):
     except:
         raise Exception("API Failed to return successful response or no holds detected")
 
-def get_wall_mask(rgb_img, wall_model=None, wall_model_loc='../../models/wall_segmentor.pth'):
+def get_wall_mask(rgb_img, wall_model=None, wall_model_loc='../models/wall_segmentor.pth'):
     """
     Helper method to predict wall-segmentation mask
     for use in CV hold-color detection
@@ -248,4 +248,9 @@ def predict_CV_holds_colors(rgb_img, wall_model=None):
     # return holds
     wall_mask, wall_model = get_wall_mask(rgb_img, wall_model=wall_model) # keep wall model to prevent needing to reload model
     holds, colors, contours = all_colors_segment(rgb_img, wall_mask, isMask = True)
+    return holds, colors, wall_model
+
+def predict_holds_colors(rgb_img, wall_model=None):
+    wall_mask, wall_model = get_wall_mask(rgb_img, wall_model=wall_model) # keep wall model to prevent needing to reload model
+    holds, colors = correctHolds(rgb_img, wall_mask)
     return holds, colors, wall_model
