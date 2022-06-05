@@ -6,6 +6,7 @@ from utils.video_utils import get_video_array, crop_video
 from utils.extraction import process_video
 from utils.pc_complete_utils import compute_percent_complete
 from utils.pose_features import get_num_moves, compute_time_elapsed, compute_total_distance_traveled
+from utils.move_validity_utils import getColorRoute, getPercentMoveValidity, getPercentHoldValidity
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Run script to produce a report from a climb video')
@@ -35,17 +36,23 @@ def main(args):
     print("Sig Position Frames: ", len(sig_positions['left_hand']))
 
     percent_complete = compute_percent_complete(holds, all_positions)
-    num_moves, distinct_holds_used = get_num_moves(climb_holds_used, significances)
-    # move valididty
+    
+    num_moves, move_holds_used, distinct_holds_used = get_num_moves(climb_holds_used, significances)
+    
+    route_color = getColorRoute(distinct_holds_used, holds, colors)
+    hold_validity = getPercentHoldValidity(distinct_holds_used, colors, route_color)
+    move_validity = getPercentMoveValidity(move_holds_used, colors, route_color)
+    
     time_elapsed = compute_time_elapsed(raw_vid, holds, all_positions=all_positions, fps=30)
     if time_elapsed == -1:
-        print("Time elapsed could not be computed.")
+        raise Exception("Total Time Elapsed could Not Be Computed")
     total_distance = compute_total_distance_traveled(sig_positions)
     
     print("")
     print("% Complete: ", percent_complete)
     print("# of Moves Taken: ", num_moves)
-    print("Move Validity: ")
+    print("Hold Validity: {:.2f}".format(hold_validity * 100))
+    print("Move Validity: {:.2f}".format(move_validity * 100))
     print("Climb Duration: {} sec".format(time_elapsed))
     print("Total Distance Climbed: {:.2f} px".format(total_distance))
 

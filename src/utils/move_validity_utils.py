@@ -1,12 +1,13 @@
 #! /usr/bin/python
 
 import cv2
-import video_utils
-import pose_utils
-import hold_utils
-import color_range_analysis_utils
 import numpy as np
 import mediapipe as mp
+
+from utils import video_utils
+from utils import pose_utils
+from utils import hold_utils
+from utils import color_range_analysis_utils
 
 def getFirstHoldColor(holds_used, holds, colors):
 	"""
@@ -87,7 +88,7 @@ def getPercentMoveValidity(holds_used, colors, route_color):
 	"""
 	Returns the move validity : # valid moves / # total moves
 	"""
-	total = len(holds_used)
+	total = len(holds_used) - 1
 	invalid = 0
 
 	# first position

@@ -4,28 +4,22 @@ import math
 def get_num_moves(climb_holds_used, frame_significances):
     assert len(climb_holds_used) == len(frame_significances)
 
-    # num_moves = 0
-    # prev_holds_used = all_holds_used[0]
-    # for i in range(1, len(frame_significances)):
-    #     if frame_significances[i]:
-    #         if sum(all_holds_used[i]) > 0 and all_holds_used[i] != prev_holds_used: # 30/26
-    #             num_moves += 1
-    #             prev_holds_used = all_holds_used[i]
+    move_holds_used = []
+    prev_holds_used = None
+    for i in range(len(frame_significances)):
+        if frame_significances[i] and prev_holds_used is None:
+            move_holds_used.append(climb_holds_used[i])
+            prev_holds_used = climb_holds_used[i]
+        elif frame_significances[i]:
+            if sum(climb_holds_used[i]) > 0 and climb_holds_used[i] != prev_holds_used:
+                move_holds_used.append(climb_holds_used[i])
+                prev_holds_used = climb_holds_used[i]
 
-    # for i in range(1, len(all_holds_used)): # 50
-    #     if all_holds_used[i] != all_holds_used[i-1]:
-    #         num_moves += 1
+    distinct_holds_used = list(set([tuple(elem) for elem in move_holds_used]))
+
+    num_moves = len(move_holds_used) - 1
     
-    # num_moves = len(set([tuple(elem) for elem in all_holds_used])) - 1 # 16
-    
-    sig_holds_used = []
-    for i in range(1, len(frame_significances)):
-        if frame_significances[i]:
-            sig_holds_used.append(tuple(climb_holds_used[i]))
-    distinct_holds_used = set(sig_holds_used)
-    num_moves = len(distinct_holds_used)
-    
-    return num_moves, list(distinct_holds_used)
+    return num_moves, move_holds_used, distinct_holds_used
 
 def compute_time_elapsed(video, holds, all_positions, fps=30):
     # start frame is first frame where both hands are on some hold
