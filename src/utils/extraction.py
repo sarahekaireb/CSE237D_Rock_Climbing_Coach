@@ -1,7 +1,7 @@
 import mediapipe as mp
 from scipy import spatial
 
-from utils.hold_utils import predict_holds_colors, predict_NN_holds_colors
+from utils.hold_utils import get_holds_and_colors
 from utils.pc_complete_utils import get_holds_used
 
 def check_similarity(list1, list2):
@@ -78,7 +78,7 @@ def process_video(video, hold_img):
     # num moves should be sum(significances) - 1
 
     # holds, colors, wall_model = predict_holds_colors(hold_img, wall_model=None)    
-    holds, colors = predict_NN_holds_colors(hold_img)
+    holds, colors = get_holds_and_colors(hold_img)
     climb_holds_used = get_holds_used(holds, all_positions)
 
     return video, climb_holds_used, holds, colors, results_arr, landmarks_arr, all_positions, sig_positions, significances

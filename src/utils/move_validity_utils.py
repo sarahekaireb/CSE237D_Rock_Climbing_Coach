@@ -210,7 +210,7 @@ def process_video(VIDEO_PATH, HOLDS_PATH, hd_mode = 'cv'):
 		print("ml")
 		hold_img = video[0]
 		#hold_img = cv2.cvtColor(cv2.imread(HOLDS_PATH), cv2.COLOR_BGR2RGB)
-		holds, colors = hold_utils.predict_NN_holds_colors(hold_img)
+		holds, colors = hold_utils.get_holds_and_colors(hold_img)
 	else:
 		print("cv")
 		hold_img = video[0]

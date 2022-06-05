@@ -14,13 +14,19 @@ def get_parser():
                         help='filepath of climb video and hold image for generating report.txt')
     return parser
 
-def get_data(args):
+def get_data(args, get_cropped=True):
     files = os.listdir(args.dir)
     assert 'climb.mp4' in files
     assert 'holds.jpg' in files
-    vid_path = os.path.join(args.dir, 'climb.mp4')
-    img_path = os.path.join(args.dir, 'holds.jpg')
 
+    if get_cropped:
+        assert 'cropped.mp4' in files
+
+    vid_path = os.path.join(args.dir, 'climb.mp4')
+    if get_cropped:
+        vid_path = os.path.join(args.dir, 'cropped.mp4')
+
+    img_path = os.path.join(args.dir, 'holds.jpg')
     raw_vid = get_video_array(vid_path)
     hold_img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
     return raw_vid, hold_img
@@ -38,7 +44,9 @@ def main(args):
     percent_complete = compute_percent_complete(holds, all_positions)
     
     num_moves, move_holds_used, distinct_holds_used = get_num_moves(climb_holds_used, significances)
-    
+    print("Move Holds: ", len(move_holds_used))
+    print("Distinct Holds: ", len(distinct_holds_used))
+
     route_color = getColorRoute(distinct_holds_used, holds, colors)
     hold_validity = getPercentHoldValidity(distinct_holds_used, colors, route_color)
     move_validity = getPercentMoveValidity(move_holds_used, colors, route_color)
