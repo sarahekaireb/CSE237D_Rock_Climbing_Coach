@@ -18,17 +18,13 @@ def get_parser():
 
 def get_data(args, get_cropped=True):
     files = os.listdir(args.dir)
-    assert 'climb.mp4' in files
-    assert 'holds.jpg' in files
 
-    if get_cropped:
-        assert 'cropped.mp4' in files
-
-    vid_path = os.path.join(args.dir, 'climb.mp4')
-    if get_cropped:
-        vid_path = os.path.join(args.dir, 'cropped.mp4')
-
-    img_path = os.path.join(args.dir, 'holds.jpg')
+    for file in files:
+        if file.endswith('.mp4'):
+            vid_path = os.path.join(args.dir, file)
+        elif file.endswith('.jpg') or file.endswith('.png'):
+            img_path = os.path.join(args.dir, file)
+    
     raw_vid = get_video_array(vid_path)
     hold_img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
     return raw_vid, hold_img
