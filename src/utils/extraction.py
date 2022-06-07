@@ -3,6 +3,7 @@ from scipy import spatial
 
 from utils.hold_utils import get_holds_and_colors
 from utils.pc_complete_utils import get_holds_used
+from utils.pose_utils import get_significant_frames_motion_graph
 
 def check_similarity(list1, list2):
     """Returns similarity between two lists of landmark coordinates"""
@@ -40,14 +41,15 @@ def get_video_pose(vid_arr):
                 lm_list.append(cx)
                 lm_list.append(cy)
             
-            if i == 0:
-                significances.append(True)
-            elif check_similarity(prev, lm_list) < 0.99999:
-                significances.append(True)
-            else:
-                significances.append(False)
+#             if i == 0:
+#                 significances.append(True)
+#             elif check_similarity(prev, lm_list) < 0.99999:
+#                 significances.append(True)
+#             else:
+#                 significances.append(False)
             
             prev = lm_list
+        
             all_landmarks.append(lm_list)
             all_results.append(results)
             dict_coordinates['left_hand'].append((lm_list[38], lm_list[39])) #left_index - x, y 
@@ -56,6 +58,7 @@ def get_video_pose(vid_arr):
             dict_coordinates['right_hip'].append((lm_list[48], lm_list[49])) #right_hip - x, y
             dict_coordinates['left_leg'].append((lm_list[62], lm_list[63])) #left_foot - x, y
             dict_coordinates['right_leg'].append((lm_list[64], lm_list[65])) #right_foot - x, y
+    significances = get_significant_frames_motion_graph(all_landmarks)
 
     return frames, all_results, all_landmarks, dict_coordinates, significances
 

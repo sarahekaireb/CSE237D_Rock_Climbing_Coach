@@ -1,6 +1,9 @@
 import mediapipe as mp
 from scipy import spatial
-
+import numpy as np
+import math
+from scipy.signal import savgol_filter
+import scipy
 def get_video_pose(vid_arr):
     """
     Returns all pose information from a video
@@ -45,6 +48,31 @@ def check_similarity(list1, list2):
     """Returns similarity between two lists of landmark coordinates"""
     result = 1 - spatial.distance.cosine(list1, list2)
     return result
+
+def find_troughs(angles):
+    angles = np.asarray(angles)
+    peaks = scipy.signal.find_peaks(-1*angles,distance = 21,width=5)
+    return peaks
+
+def get_significant_frames_motion_graph(landmarks):
+    L = len(landmarks)
+    angles = []
+    step = 7
+    for i in range(step,L):
+        lm_list1 = np.asarray(landmarks[i-step])
+        lm_list2 = np.asarray(landmarks[i])
+        idx = [38,39,40,41,46,47,48,49,62,63,64,65]
+        
+        pose_1 = lm_list1[idx]
+        pose_2 = lm_list2[idx]
+        angle = math.acos(1-spatial.distance.cosine(list(pose_1),list(pose_2)))
+        angles.append(angle)
+    print("Length frames ",len(angles))
+    angles_smooth = savgol_filter(angles,21,3)
+    peaks = find_troughs(angles_smooth)[0]
+    sig_frames = np.zeros(L)
+    sig_frames[peaks] = 1
+    return sig_frames
 
 def get_significant_frames(landmarks):
     """
