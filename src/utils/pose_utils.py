@@ -67,7 +67,6 @@ def get_significant_frames_motion_graph(landmarks):
         pose_2 = lm_list2[idx]
         angle = math.acos(1-spatial.distance.cosine(list(pose_1),list(pose_2)))
         angles.append(angle)
-    print("Length frames ",len(angles))
     angles_smooth = savgol_filter(angles,21,3)
     peaks = find_troughs(angles_smooth)[0]
     sig_frames = np.zeros(L)

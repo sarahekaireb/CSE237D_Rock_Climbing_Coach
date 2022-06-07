@@ -6,7 +6,7 @@ import json
 
 from utils.video_utils import get_video_array, crop_video
 from utils.extraction import process_video
-from utils.pc_complete_utils import compute_percent_complete
+from utils.pc_complete_utils import compute_percent_complete, compute_percent_complete_color
 from utils.pose_features import get_num_moves, compute_time_elapsed, compute_total_distance_traveled
 from utils.move_validity_utils import getColorRoute, getPercentMoveValidity, getPercentHoldValidity
 
@@ -39,7 +39,7 @@ def main(args):
     print("All Positions Frames: ", len(all_positions['left_hand']))
     print("Sig Position Frames: ", len(sig_positions['left_hand']))
 
-    percent_complete = compute_percent_complete(holds, all_positions)
+    percent_complete = compute_percent_complete_color(holds, colors, all_positions)
     
     num_moves, move_holds_used, distinct_holds_used = get_num_moves(climb_holds_used, significances)
     print("Move Holds: ", len(move_holds_used))
