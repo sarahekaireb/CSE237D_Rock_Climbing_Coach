@@ -4,6 +4,8 @@ import numpy as np
 import math
 from scipy.signal import savgol_filter
 import scipy
+from matplotlib import pyplot as plt
+
 def get_video_pose(vid_arr):
     """
     Returns all pose information from a video
@@ -54,7 +56,7 @@ def find_troughs(angles):
     peaks = scipy.signal.find_peaks(-1*angles,distance = 21,width=5)
     return peaks
 
-def get_significant_frames_motion_graph(landmarks):
+def get_significant_frames_motion_graph(dir,landmarks):
     L = len(landmarks)
     angles = []
     step = 7
@@ -71,7 +73,14 @@ def get_significant_frames_motion_graph(landmarks):
     peaks = find_troughs(angles_smooth)[0]
     sig_frames = np.zeros(L)
     sig_frames[peaks] = 1
+    generate_motion_graph(dir, angles)
     return sig_frames
+
+def generate_motion_graph(dir, angles):
+    plt.plot(angles)
+    plt.ylabel('Angle', labelpad=15)
+    plt.title('Angle vs nth move')
+    plt.savefig(dir+'/angular_velocity.png')
 
 def get_significant_frames(landmarks):
     """

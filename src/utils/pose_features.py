@@ -1,5 +1,6 @@
 from utils.pc_complete_utils import joint_in_hold
 import math
+from matplotlib import pyplot as plt
 
 def get_num_moves(climb_holds_used, frame_significances):
     assert len(climb_holds_used) == len(frame_significances)
@@ -59,19 +60,28 @@ def compute_distance(left_hip1, right_hip1, left_hip2, right_hip2):
     right_dist = math.hypot(r1_x - r2_x, r1_y - r2_y)
     return (left_dist + right_dist)/2
 
-def compute_total_distance_traveled(sig_positions):
+def compute_total_distance_traveled(dir, sig_positions):
     prev_left = sig_positions['left_hip'][0]
     prev_right = sig_positions['right_hip'][0]
     
     total_dist = 0
+    distances = []
     for i in range(1, len(sig_positions['left_hip'])):
         cur_left = sig_positions['left_hip'][i]
         cur_right = sig_positions['right_hip'][i]
         
         delta = compute_distance(prev_left, prev_right, cur_left, cur_right)
         total_dist += delta
-
+        distances.append(delta)
         prev_left = cur_left
         prev_right = cur_right
     
+    generate_distance_graph(dir, distances)
     return total_dist
+
+def generate_distance_graph(dir, distances):
+    plt.plot(distances)
+    plt.xlabel('nth move', labelpad=15)
+    plt.ylabel('Distance', labelpad=15)
+    plt.title('Distance vs nth move')
+    plt.savefig(dir+'/distance_moved.png')

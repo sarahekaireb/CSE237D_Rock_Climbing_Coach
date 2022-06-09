@@ -33,7 +33,7 @@ def main(args):
     raw_vid, hold_img = get_data(args)
     
     # process video, extract all necessary information
-    raw_vid, climb_holds_used, holds, colors, results_arr, landmarks_arr, all_positions, sig_positions, significances = process_video(raw_vid, hold_img)
+    raw_vid, climb_holds_used, holds, colors, results_arr, landmarks_arr, all_positions, sig_positions, significances = process_video(args.dir, raw_vid, hold_img)
     print("Video frames: ", raw_vid.shape[0])
     print("Holds Used Frames: ", len(climb_holds_used))
     print("All Positions Frames: ", len(all_positions['left_hand']))
@@ -52,7 +52,7 @@ def main(args):
     time_elapsed = compute_time_elapsed(raw_vid, holds, all_positions=all_positions, fps=30)
     if time_elapsed == -1:
         raise Exception("Total Time Elapsed could Not Be Computed")
-    total_distance = compute_total_distance_traveled(sig_positions)
+    total_distance = compute_total_distance_traveled(args.dir, sig_positions)
     
     print("")
     print("% Complete: ", percent_complete)

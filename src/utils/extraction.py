@@ -10,7 +10,7 @@ def check_similarity(list1, list2):
     result = 1 - spatial.distance.cosine(list1, list2)
     return result
 
-def get_video_pose(vid_arr):
+def get_video_pose(dir, vid_arr):
     """
     Returns all pose information from a video
     vid_arr: np array
@@ -58,14 +58,14 @@ def get_video_pose(vid_arr):
             dict_coordinates['right_hip'].append((lm_list[48], lm_list[49])) #right_hip - x, y
             dict_coordinates['left_leg'].append((lm_list[62], lm_list[63])) #left_foot - x, y
             dict_coordinates['right_leg'].append((lm_list[64], lm_list[65])) #right_foot - x, y
-    significances = get_significant_frames_motion_graph(all_landmarks)
+    significances = get_significant_frames_motion_graph(dir, all_landmarks)
 
     return frames, all_results, all_landmarks, dict_coordinates, significances
 
-def process_video(video, hold_img):
+def process_video(dir, video, hold_img):
     # joint_positions stores all landmarks for all frames -- even insignificant frames
     # significances denotes whether the frame was significant
-    frames, results_arr, landmarks_arr, all_positions, significances = get_video_pose(video)
+    frames, results_arr, landmarks_arr, all_positions, significances = get_video_pose(dir, video)
     video = video.take(frames, axis=0)
 
     sig_positions = {'left_hand': [], 'right_hand': [], 'left_hip': [], 'right_hip': [], 'left_leg': [], 'right_leg': []}
