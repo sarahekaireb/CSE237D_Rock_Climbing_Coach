@@ -152,6 +152,26 @@ def get_highest_hold_unused_color(holds, colors, route_color):
     return highest, highest_y
 
 
+def get_last_handhold(holds, positions, colors, route_color):
+    # gets the lower hand position in the frame which had the highest hand position
+    hand_positions = list(zip(positions['left_hand'], positions['right_hand']))
+    highest_hand_pos = np.inf
+    highest_hand_frame = -1
+    for i in range(len(hand_positions)):
+        left_hand, right_hand = hand_positions[i]
+    
+        for h in range(len(holds)):
+            if (joint_in_hold(left_hand, holds[h]) or joint_in_hold(right_hand, holds[h])) and colors[h] == route_color:
+                mins, maxs = holds[h]
+                cy = (maxs[1] - mins[1]) / 2 + mins[1] #y_min + y_max - y_min
+                if cy < highest_hand_pos:
+                    highest_hand_pos = cy
+                    highest_hand_frame = i
+    
+    left_highest, right_highest = hand_positions[highest_hand_frame]
+    highest_lower_hand_pos = min(left_highest[1], right_highest[1])
+    return highest_lower_hand_pos
+
 def compute_percent_complete_color(holds, colors, positions):
     print("Color PC Complete")
     holds_used = get_holds_used(holds, positions)
@@ -164,25 +184,38 @@ def compute_percent_complete_color(holds, colors, positions):
     # route color is most frequent hold color
     route_color = max(set(colors_used), key=colors_used.count)
 
-    last_handhold_idx = get_last_double_handhold_color(holds, positions, colors, route_color)
-    if last_handhold_idx == -1:
-        last_handhold_idx = get_last_double_handhold(holds, positions)
-        raise AssertionError("Both hands were never on the same color hold")
-    else:
-        last_min, last_max = holds[last_handhold_idx]
-        last_y = int(last_max[1] - ((last_max[1] - last_min[1]) / 2))
+    lowest, lowest_y = get_lowest_hold_used_color(holds, positions, colors, route_color)
+    highest, highest_y = get_highest_hold_unused_color(holds, colors, route_color)
+    last_y = get_last_handhold(holds, positions, colors, route_color)
+    climbed = last_y - lowest_y
+    could_climb = highest_y - lowest_y
 
-        lowest, lowest_y = get_lowest_hold_used_color(holds, positions, colors, route_color)
-        highest, highest_y = get_highest_hold_unused_color(holds, colors, route_color)
+    # print("Highest: ", highest_y, highest)
+    # print("Lowest: ", lowest_y, lowest)
+    # print("Last: ", last_y, last_handhold_idx)
 
-        climbed = last_y - lowest_y
-        could_climb = highest_y - lowest_y
+    return (climbed / could_climb) * 100
 
-        print("Highest: ", highest_y, highest)
-        print("Lowest: ", lowest_y, lowest)
-        print("Last: ", last_y, last_handhold_idx)
 
-        return (climbed / could_climb) * 100
+    # last_handhold_idx = get_last_double_handhold_color(holds, positions, colors, route_color)
+    # if last_handhold_idx == -1:
+    #     last_handhold_idx = get_last_double_handhold(holds, positions)
+    #     raise AssertionError("Both hands were never on the same color hold")
+    # else:
+    #     last_min, last_max = holds[last_handhold_idx]
+    #     last_y = int(last_max[1] - ((last_max[1] - last_min[1]) / 2))
+
+    #     lowest, lowest_y = get_lowest_hold_used_color(holds, positions, colors, route_color)
+    #     highest, highest_y = get_highest_hold_unused_color(holds, colors, route_color)
+
+    #     climbed = last_y - lowest_y
+    #     could_climb = highest_y - lowest_y
+
+    #     print("Highest: ", highest_y, highest)
+    #     print("Lowest: ", lowest_y, lowest)
+    #     print("Last: ", last_y, last_handhold_idx)
+
+    #     return (climbed / could_climb) * 100
 
 
 
